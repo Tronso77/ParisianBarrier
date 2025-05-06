@@ -1,7 +1,4 @@
 # streamlit_app/validation_dashboard.py
-@st.experimental_memo(suppress_st_warning=True)
-def run_sim(model: str, nsteps: int, nsim: int, dt: float, seed: int):
-    return simulate_paths(model, nsteps, nsim, dt, seed=seed)
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -11,6 +8,9 @@ from models.simulator    import simulate_paths
 from validation.cumulants import cumulants
 from models.params       import param_assign
 
+@st.experimental_memo(suppress_st_warning=True)
+def run_sim(model: str, nsteps: int, nsim: int, dt: float, seed: int):
+    return simulate_paths(model, nsteps, nsim, dt, seed=seed)
 
 def show_validation_dashboard():
 

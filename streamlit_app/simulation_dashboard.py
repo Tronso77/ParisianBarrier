@@ -1,8 +1,4 @@
 # streamlit_app/simulation_dashboard.py
-@st.experimental_memo(suppress_st_warning=True)
-def run_sim(model: str, nsteps: int, nsim: int, dt: float, seed: int):
-    return simulate_paths(model, nsteps, nsim, dt, seed=seed)
-
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -12,6 +8,10 @@ from scipy.stats import skew, kurtosis
 # models import (src/ is added in app.py)
 from models.params import param_assign
 from models.simulator import simulate_paths
+
+@st.experimental_memo(suppress_st_warning=True)
+def run_sim(model: str, nsteps: int, nsim: int, dt: float, seed: int):
+    return simulate_paths(model, nsteps, nsim, dt, seed=seed)
 
 
 def show_simulation_dashboard():
