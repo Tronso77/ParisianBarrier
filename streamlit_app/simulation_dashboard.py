@@ -1,4 +1,7 @@
 # streamlit_app/simulation_dashboard.py
+@st.experimental_memo(suppress_st_warning=True)
+def run_sim(model: str, nsteps: int, nsim: int, dt: float, seed: int):
+    return simulate_paths(model, nsteps, nsim, dt, seed=seed)
 
 import streamlit as st
 import numpy as np
@@ -32,7 +35,7 @@ def show_simulation_dashboard():
     if st.button("Simulate Paths", key="sim_button"):
         dt = T / nsteps
         params = param_assign(model)
-        paths = simulate_paths(model, nsteps, nsim, dt, seed=int(seed))
+        paths = run_sim(model, nsteps, nsim, dt, seed=int(seed))
 
         # ── sample paths ─────────────────────────────────────────────────────────
         st.subheader(f"Sample of first 20 {model} paths")

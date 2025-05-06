@@ -29,6 +29,9 @@ def show_pricing_dashboard():
         nsteps   = st.number_input("Time steps", 10, 2000, 252, step=1)
         nsim     = st.number_input("Paths", 1_000, 1_000_000, 100_000, step=1_000)
         seed     = st.number_input("RNG seed", 0, 10_000, 42, step=1)
+        S0 = st.number_input("Spot price S₀", 1.0, 10_000.0, 100.0, step=1.0)
+        r  = st.number_input("Risk‑free rate r", 0.0, 0.20, 0.05, step=0.005)
+
 
         # payoff
         payoff_type = st.selectbox("Payoff type", ["European Call","European Put","Autocallable"])
@@ -53,9 +56,9 @@ def show_pricing_dashboard():
         strata         = st.slider("Number of strata", 2, 50, 10) if use_stratified else None
 
     # ── Run pricing ──────────────────────────────────────────────────────────────
-    if st.button("🔃 Price Now"):
+    if st.button("Price"):
         dt     = maturity / nsteps
-        params = param_assign(model)
+        params = param_assign(model, S0=S0, r=r)
 
         # build engine with new signature: MonteCarloEngine(model: str,…)
         engine = MonteCarloEngine(
@@ -93,7 +96,7 @@ def show_pricing_dashboard():
 
         # price
         method = "antithetic" if use_antithetic else ("stratified" if use_stratified else "standard")
-        discount = np.exp(-0.05 * maturity)  # flat 5% rate
+        discount = np.exp(-r * maturity)  # flat 5% rate
         result   = engine.price_option(
             payoff,
             discount=discount,
