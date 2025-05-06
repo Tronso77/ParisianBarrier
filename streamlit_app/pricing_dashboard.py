@@ -77,7 +77,7 @@ def show_pricing_dashboard():
     # ── Run pricing ──────────────────────────────────────────────────────────────
     if st.button("Price"):
         dt     = maturity / nsteps
-
+        
         # build engine
         engine = MonteCarloEngine(
             model=model,
@@ -124,16 +124,17 @@ def show_pricing_dashboard():
         c2.metric("MC Std. Error", f"{result['stderr']:.4f}")
 
         # if GBM & European, show analytic Black‑Scholes
-        if model=="GBM" and payoff_type=="European Call":
-            sigma = param_assign("GBM")[2]  # (S0, mu, sigma)
-            bc = bs_call_price(S0, K, maturity, r, sigma)
-            bc = float(bc)
+        if model == "GBM" and payoff_type == "European Call":
+        # param_assign for GBM returns (S0, mu, sigma)
+            _, _, sigma = params  
+            bs = bs_call_price(S0, K, maturity, r, sigma)
+            bs = float(bs)                      # now it's a built-in float
             st.write(f"**Black–Scholes Call Price:** {bs:.4f}")
-        if model=="GBM" and payoff_type=="European Put":
-            sigma = param_assign("GBM")[2]
+        elif model == "GBM" and payoff_type == "European Put":
+            _, _, sigma = params
             bp = bs_put_price(S0, K, maturity, r, sigma)
             bp = float(bp)
-            st.write(f"**Black–Scholes Put Price:** {bs:.4f}")
+            st.write(f"**Black–Scholes Put Price:** {bp:.4f}")
 
         # convergence plot
         st.subheader("Convergence of MC Estimate")
