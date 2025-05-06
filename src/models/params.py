@@ -23,18 +23,15 @@ PARAMETERS = {
     "SABR":    (100.0, 0.04, 0.2, -0.2, 0.1),# S0     alpha0 beta rho  gamma
 }
 
-def param_assign(model: str) -> Tuple[float, ...]:
+def param_assign(model: str, S0: float = 100.0, r: float = 0.05) -> Tuple[float, ...]:
     """
-    Look up the parameter tuple for `model` (case-insensitive).
-    Raises a clear ValueError listing all supported keys.
+    Returns the tuple of parameters for `model`, always starting with S0 and
+    ending with r, so downstream code can rely on a uniform signature.
     """
-    # normalize
-    key = model.strip().upper()
-
-    if key not in PARAMETERS:
-        supported = ", ".join(sorted(PARAMETERS.keys()))
-        raise ValueError(
-            f"Model '{model}' not supported. "
-            f"Supported models: {supported}"
-        )
-    return PARAMETERS[key]
+    key = model.upper()
+    try:
+        base = PARAMETERS[key]
+    except KeyError:
+        raise ValueError(f"Model '{model}' not supported in param_assign.")
+    # e.g. (S0, μ, σ, ..., r)
+    return (S0, *base, r)
