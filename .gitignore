@@ -14,8 +14,6 @@ venv/
 .DS_Store
 
 # Project folders to ignore
-/src/models/simulator.py
-/src/validation/cumulants.py
 notebooks/
 data/
 plots/
