@@ -3,7 +3,7 @@ import pandas as pd
 from scipy.special import gamma
 from models.params import param_assign
 
-def simulate_paths(model, nsteps, nsim, dt, seed=None, S0=None):
+def simulate_paths(model, nsteps, nsim, dt, seed=None,*, S0=None, r=None):
     """
     Unified path simulation interface for cumulant-based models.
     Returns a DataFrame of simulated paths.
@@ -14,9 +14,12 @@ def simulate_paths(model, nsteps, nsim, dt, seed=None, S0=None):
     model = model.upper()
     # pull default params (possibly including S0 as first entry)
     params = list(param_assign(model)) # override the initial spot if supplied
-    if S0 is not None and model in ["GBM", "CEV", "HESTON", "SABR"]:
+    if S0 is not None:
         params[0] = S0 
-        params = tuple(params)
+    if r is not None:
+        params[-1] = r
+        
+    params = tuple(params)
 
     if model == "BM":
         return _simulate_bm(params, nsteps, nsim, dt)

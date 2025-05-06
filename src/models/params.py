@@ -23,15 +23,9 @@ PARAMETERS = {
     "SABR":    (100.0, 0.04, 0.2, -0.2, 0.1),# S0     alpha0 beta rho  gamma
 }
 
-def param_assign(model: str, S0: float = 100.0, r: float = 0.05) -> Tuple[float, ...]:
-    """
-    Returns the tuple of parameters for `model`, always starting with S0 and
-    ending with r, so downstream code can rely on a uniform signature.
-    """
+def param_assign(model: str) -> Tuple[float, ...]:
     key = model.upper()
     try:
-        base = PARAMETERS[key]
+        return PARAMETERS[key]
     except KeyError:
         raise ValueError(f"Model '{model}' not supported in param_assign.")
-    # e.g. (S0, μ, σ, ..., r)
-    return (S0, *base, r)
