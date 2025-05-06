@@ -1,4 +1,4 @@
-from models.simulator import simulate_paths
+from .simulator import simulate_paths
 import numpy as np
 import pandas as pd
 from typing import Optional, Dict

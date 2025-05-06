@@ -1,15 +1,15 @@
 # streamlit_app/app.py
-
-import streamlit as st
-
-st.set_page_config(page_title="Monte Carlo Simulator", layout="wide")
-
 import os, sys
 
 sys.path.insert(
     0,
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
 )
+
+import streamlit as st
+
+st.set_page_config(page_title="Monte Carlo Simulator", layout="wide")
+
 
 # 3) Import each dashboard’s entry point
 from simulation_dashboard    import show_simulation_dashboard
