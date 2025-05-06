@@ -16,7 +16,6 @@ venv/
 # Project folders to ignore
 src/
 notebooks/
-streamlit_app/
 data/
 plots/
 tests/
