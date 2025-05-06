@@ -77,11 +77,12 @@ def show_pricing_dashboard():
     # ── Run pricing ──────────────────────────────────────────────────────────────
     if st.button("Price"):
         dt     = maturity / nsteps
-        
+        params = param_assign(model, S0=S0, r=r)
+
         # build engine
         engine = MonteCarloEngine(
             model=model,
-            params=param_assign(model),
+            params=param_assign(model, S0=S0, r=r),
             nsteps=int(nsteps),
             nsim=int(nsim),
             dt=dt,
@@ -123,18 +124,17 @@ def show_pricing_dashboard():
         c1.metric("MC Price",      f"{result['price']:.4f}")
         c2.metric("MC Std. Error", f"{result['stderr']:.4f}")
 
-        # if GBM & European, show analytic Black‑Scholes
-        if model == "GBM" and payoff_type == "European Call":
-            sigma = params[-1]
-            bs = bs_call_price(S0, K, maturity, r, sigma)
-            bs = float(bs)
-            st.write(f"**Black–Scholes Call Price:** {bs:.4f}")
+        # If GBM, also show closed‑form Black–Scholes result
+        if model == "GBM":
+            S0_gbm, mu_gbm, sigma_gbm = params
+            # call price
+            bs_c = bs_call_price(S0_gbm, K, maturity, r, sigma_gbm)
+            st.markdown(f"**Black–Scholes Call Price:** {float(bs_c):.4f}")
+            # put price
+            bs_p = bs_put_price(S0_gbm, K, maturity, r, sigma_gbm)
+            st.markdown(f"**Black–Scholes Put Price:**  {float(bs_p):.4f}")
 
-        if model == "GBM" and payoff_type == "European Put":
-            sigma = params[-1]
-            bp = bs_put_price(S0, K, maturity, r, sigma)
-            bp = float(bp)
-            st.write(f"**Black–Scholes Put Price:** {bp:.4f}")
+
 
         # convergence plot
         st.subheader("Convergence of MC Estimate")
