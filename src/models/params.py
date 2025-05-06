@@ -1,9 +1,3 @@
-"""
-params.py
-
-Default parameter sets for each supported model.
-Each entry is a tuple in the order expected by the simulator & cumulant routines.
-"""
 from typing import Tuple
 
 PARAMETERS = {
@@ -18,14 +12,32 @@ PARAMETERS = {
     "KJD":     (0.0, 0.2, 0.75, 0.4, 0.3, 0.2),
     "CGMY":    (0.0, 0.6509, 5.853, 18.27, 1.8),
     "CIR":     (0.2, 0.3, 0.2, 0.04),
-    "HESTON":  (100.0, 0.04, 0.3, 0.2, 0.2, -0.2, 0.01),# S0 v0  kappa theta eta rho  r
-    "CEV":     (100.0, 0.1, -2.0, 0.2), # S0,  mu, beta, sigma
-    "SABR":    (100.0, 0.04, 0.2, -0.2, 0.1),# S0     alpha0 beta rho  gamma
+    "HESTON":  (100.0, 0.04, 0.3, 0.2, 0.2, -0.2, 0.01), # S0, v0, kappa, theta, eta, rho, r
+    "CEV":     (100.0, 0.1, -2.0, 0.2),                  # S0, mu, beta, sigma
+    "SABR":    (100.0, 0.04, 0.2, -0.2, 0.1),            # S0, alpha0, beta, rho, gamma
 }
 
-def param_assign(model: str) -> Tuple[float, ...]:
+def param_assign(model: str, *, S0: float = None, r: float = None) -> Tuple[float, ...]:
     key = model.upper()
-    try:
-        return PARAMETERS[key]
-    except KeyError:
-        raise ValueError(f"Model '{model}' not supported in param_assign.")
+    if key not in PARAMETERS:
+        raise ValueError(f"Model '{model}' not supported.")
+    params = list(PARAMETERS[key])
+
+    # override initial spot
+    if S0 is not None:
+        params[0] = S0
+
+    # override drift or rate
+    if r is not None:
+        if key == "GBM":
+            # GBM tuple is [S0, mu, sigma], so override mu
+            params[1] = r
+        elif key == "HESTON":
+            # Heston tuple is [S0, v0, kappa, theta, eta, rho, r]
+            params[-1] = r
+        elif key == "CEV":
+            # if you want risk‑neutral CEV, override mu
+            params[1] = r
+        # you can add other models here if their drift term is in a fixed position
+
+    return tuple(params)
