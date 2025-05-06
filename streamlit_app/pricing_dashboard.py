@@ -58,12 +58,11 @@ def show_pricing_dashboard():
     # ── Run pricing ──────────────────────────────────────────────────────────────
     if st.button("Price"):
         dt     = maturity / nsteps
-        params = param_assign(model, S0=S0, r=r)
-
+        
         # build engine with new signature: MonteCarloEngine(model: str,…)
         engine = MonteCarloEngine(
             model=model,
-            params=params,
+            params=param_assign(model),
             nsteps=int(nsteps),
             nsim=int(nsim),
             dt=dt,
@@ -71,7 +70,8 @@ def show_pricing_dashboard():
         )
 
         # simulate
-        paths = engine.simulate()
+        paths = engine.simulate(S0=S0, r=r)
+
 
         # show a few sample paths
         st.subheader("Sample Paths (first 10)")
