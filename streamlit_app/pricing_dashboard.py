@@ -125,13 +125,13 @@ def show_pricing_dashboard():
 
         # if GBM & European, show analytic Black‑Scholes
         if model == "GBM" and payoff_type == "European Call":
-        # param_assign for GBM returns (S0, mu, sigma)
-            _, _, sigma = params  
+            sigma = params[-1]
             bs = bs_call_price(S0, K, maturity, r, sigma)
-            bs = float(bs)                      # now it's a built-in float
+            bs = float(bs)
             st.write(f"**Black–Scholes Call Price:** {bs:.4f}")
-        elif model == "GBM" and payoff_type == "European Put":
-            _, _, sigma = params
+
+        if model == "GBM" and payoff_type == "European Put":
+            sigma = params[-1]
             bp = bs_put_price(S0, K, maturity, r, sigma)
             bp = float(bp)
             st.write(f"**Black–Scholes Put Price:** {bp:.4f}")
