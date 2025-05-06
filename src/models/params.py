@@ -24,8 +24,17 @@ PARAMETERS = {
 }
 
 def param_assign(model: str) -> Tuple[float, ...]:
-    key = model.upper()
-    try:
-        return PARAMETERS[key]
-    except KeyError:
-        raise ValueError(f"Model '{model}' not supported in param_assign.")
+    """
+    Look up the parameter tuple for `model` (case-insensitive).
+    Raises a clear ValueError listing all supported keys.
+    """
+    # normalize
+    key = model.strip().upper()
+
+    if key not in PARAMETERS:
+        supported = ", ".join(sorted(PARAMETERS.keys()))
+        raise ValueError(
+            f"Model '{model}' not supported. "
+            f"Supported models: {supported}"
+        )
+    return PARAMETERS[key]

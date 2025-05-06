@@ -6,7 +6,7 @@ A Python package and Streamlit application for simulating, validating, and prici
 
 A deployed version is available here:
 
-**https://simulator-qkgifver3dubslcxrwckbm.streamlit.app/**
+**https://simulator-mc.streamlit.app/**
 
 
 ## Features
