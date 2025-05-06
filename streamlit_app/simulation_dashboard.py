@@ -9,7 +9,7 @@ from scipy.stats import skew, kurtosis
 from models.params import param_assign
 from models.simulator import simulate_paths
 
-@st.experimental_memo(suppress_st_warning=True)
+@st.cache_data
 def run_sim(model: str, nsteps: int, nsim: int, dt: float, seed: int):
     return simulate_paths(model, nsteps, nsim, dt, seed=seed)
 
