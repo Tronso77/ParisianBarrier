@@ -11,7 +11,7 @@ from models.params       import param_assign
 
 
 def show_validation_dashboard():
-    """Render the cumulant‑validation dashboard with enriched visuals."""
+
     # Sidebar controls
     st.sidebar.title("📊 Validation Settings")
     model   = st.sidebar.selectbox("Model", [

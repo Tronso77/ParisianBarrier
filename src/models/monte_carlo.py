@@ -22,7 +22,6 @@ class MonteCarloEngine:
         self.seed            = seed
 
     def simulate(self, **kwargs) -> pd.DataFrame:
-        # now simulate_paths is defined
         return simulate_paths(
             self.model,
             self.nsteps,

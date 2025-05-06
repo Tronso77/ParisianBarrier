@@ -2,12 +2,10 @@
 
 import streamlit as st
 
-# 1) Page config must be first Streamlit command
 st.set_page_config(page_title="Monte Carlo Simulator", layout="wide")
 
 import os, sys
 
-# 2) Ensure your src/ folder is on the import path
 sys.path.insert(
     0,
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
