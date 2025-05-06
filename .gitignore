@@ -1,11 +1,22 @@
+# Byte‑compiled
 __pycache__/
+*.py[cod]
+
+# Jupyter
 .ipynb_checkpoints/
-*.pyc
+
+# Virtual env / dotenv
 .env
+venv/
+.venv/
+
+# macOS
 .DS_Store
-src 
-notebooks
-streamlit_app
-data
-plots
-tests
+
+# Project folders to ignore
+src/
+notebooks/
+streamlit_app/
+data/
+plots/
+tests/
