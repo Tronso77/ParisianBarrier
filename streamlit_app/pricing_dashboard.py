@@ -126,11 +126,13 @@ def show_pricing_dashboard():
         # if GBM & European, show analytic Black‑Scholes
         if model=="GBM" and payoff_type=="European Call":
             sigma = param_assign("GBM")[2]  # (S0, mu, sigma)
-            bs = bs_call_price(S0, K, maturity, r, sigma)
+            bc = bs_call_price(S0, K, maturity, r, sigma)
+            bc = float(bc)
             st.write(f"**Black–Scholes Call Price:** {bs:.4f}")
         if model=="GBM" and payoff_type=="European Put":
             sigma = param_assign("GBM")[2]
-            bs = bs_put_price(S0, K, maturity, r, sigma)
+            bp = bs_put_price(S0, K, maturity, r, sigma)
+            bp = float(bp)
             st.write(f"**Black–Scholes Put Price:** {bs:.4f}")
 
         # convergence plot
