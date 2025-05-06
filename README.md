@@ -1,2 +1,17 @@
 # Simulator
-Simulates and analyzes derivatives under market volatility.
+
+Simulates and analyzes exotic structured products under various models.
+
+## Features
+- Modular path simulator: 
+  Working for now : 
+
+
+## Repo Structure
+- `src/` — simulation engine, payoff logic, hedge modules
+- `notebooks/` — visual exploration + experiments
+- `data/` — sample paths and outputs
+- `plots/` — graphs for reports/thesis
+- `streamlit_app/` — app UI
+
+Built as part of a master's thesis
