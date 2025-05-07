@@ -154,9 +154,10 @@ def _simulate_cgmy(params, nsteps, nsim, dt, trunc_eps=1e-4):
 
     # Approximate Lévy measure truncation
     # Simulate compound Poisson process for large jumps
-    jump_rate = C * gamma(1 - Y) * ((G ** (Y - 1)) + (M ** (Y - 1)))
-    jump_rate = abs(jump_rate)
-    num_jumps = np.random.poisson(jump_rate * T, size=nsim)
+    lam = C * gamma(1 - Y) * (G**(Y - 1) + M**(Y - 1))
+    lam = float(abs(lam))            # ensure scalar ≥0
+    num_jumps = np.random.poisson(lam * T, size=nsim)
+   
 
     paths = np.zeros((nsteps + 1, nsim))
     for i in range(nsim):
