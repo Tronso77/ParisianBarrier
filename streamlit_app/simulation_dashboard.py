@@ -22,7 +22,7 @@ def show_simulation_dashboard():
     with col1:
         model = st.selectbox(
             "Model",
-            [m for m in ["BM","ABM","GBM","VG","NIG","MJD","KJD","POI","GAMMA","CIR","HESTON","CEV","SABR", "VGCIR", "CGMY"],
+             ["BM","ABM","GBM","VG","NIG","MJD","KJD","POI","GAMMA","CIR","HESTON","CEV","SABR", "VGCIR", "CGMY"],
             key="sim_model"
         )
         seed = st.number_input("RNG seed", value=42, step=1, key="sim_seed")
