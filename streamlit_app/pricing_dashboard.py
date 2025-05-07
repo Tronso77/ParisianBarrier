@@ -44,7 +44,7 @@ def show_pricing_dashboard():
         st.subheader("Pricing Settings")
 
         # model & simulation
-        model    = st.selectbox("Underlying Model", ["GBM","VG","NIG","MJD","KJD","HESTON"])
+        model    = st.selectbox("Underlying Model", ["GBM","HESTON"])
         maturity = st.number_input("Maturity (years)", 0.01, 5.0, 1.0, step=0.01)
         nsteps   = st.number_input("Time steps", 10, 2000, 252, step=1)
         nsim     = st.number_input("Paths", 1_000, 1_000_000, 100_000, step=1_000)
