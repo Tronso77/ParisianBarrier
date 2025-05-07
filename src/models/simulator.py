@@ -203,30 +203,39 @@ def _simulate_cir(params, nsteps, nsim, dt):
 # ---------------------------------------------
 # CEV Process
 def _simulate_cev(params, nsteps, nsim, dt):
-    S0, mu, b, sigma = params
-    X = np.zeros((nsteps + 1, nsim))
-    X[0, :] = S0
+    S0, mu, beta, sigma = params
+    X = np.zeros((nsteps+1, nsim))
+    X[0,:] = S0
     dW = np.sqrt(dt) * np.random.randn(nsteps, nsim)
-    for j in range(1, nsteps + 1):
-        X_prev = np.maximum(X[j - 1, :], 1e-8)
-        X[j, :] = X_prev + mu * dt + sigma * X_prev ** b * dW[j - 1, :]
+    for j in range(1, nsteps+1):
+        X_prev = np.clip(X[j-1,:], 1e-8, None)          # avoid zero
+        X[j,:] = X_prev \
+            + mu * dt \
+            + sigma * (X_prev ** beta) * dW[j-1,:]
+        X[j,:] = np.clip(X[j,:], 0, None)               # enforce non‑negative
     return pd.DataFrame(X)
+
 
 # ---------------------------------------------
 # SABR Process
 def _simulate_sabr(params, nsteps, nsim, dt):
     S0, alpha0, beta, rho, gamma = params
+    F = np.zeros((nsteps+1, nsim))
+    v = np.zeros((nsteps+1, nsim))
+    F[0,:], v[0,:] = S0, alpha0
     dZ = np.sqrt(dt) * np.random.randn(nsteps, nsim)
     dW = np.sqrt(dt) * np.random.randn(nsteps, nsim)
-    v = np.zeros((nsteps + 1, nsim))
-    F = np.zeros((nsteps + 1, nsim))
-    v[0, :] = alpha0
-    F[0, :] = S0
-    for j in range(1, nsteps + 1):
-        v[j, :] = np.maximum(v[j - 1, :] + gamma * v[j - 1, :] * dZ[j - 1, :], 0)
-        dB = rho * dZ[j - 1, :] + np.sqrt(1 - rho ** 2) * dW[j - 1, :]
-        F[j, :] = np.maximum(F[j - 1, :] + v[j - 1, :] * F[j - 1, :] ** beta * dB, 0)
+    for j in range(1, nsteps+1):
+        v_prev = np.clip(v[j-1,:], 1e-8, None)
+        F_prev = np.clip(F[j-1,:], 1e-8, None)
+        v[j,:] = np.maximum(v_prev + gamma * v_prev * dZ[j-1,:], 0)
+        dB     = rho * dZ[j-1,:] + np.sqrt(1 - rho**2) * dW[j-1,:]
+        F[j,:] = np.maximum(
+            F_prev + v_prev * (F_prev ** beta) * dB,
+            0
+        )
     return pd.DataFrame(F)
+
 
 # ---------------------------------------------
 # Variance Gamma subordinated by CIR
