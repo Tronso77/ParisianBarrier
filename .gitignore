@@ -13,7 +13,8 @@ venv/
 .DS_Store
 
 # Project folders to ignore
-/src/models/params.py/
+/src/validation/
+
 notebooks/
 data/
 plots/
