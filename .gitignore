@@ -13,8 +13,7 @@ venv/
 .DS_Store
 
 # Project folders to ignore
-/src/validation/
-
+src/validation/
 notebooks/
 data/
 plots/
