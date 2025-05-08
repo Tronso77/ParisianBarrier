@@ -35,9 +35,6 @@ def param_assign(model: str, *, S0: float = None, r: float = None) -> Tuple[floa
         elif key == "HESTON":
             # Heston tuple is [S0, v0, kappa, theta, eta, rho, r]
             params[-1] = r
-        elif key == "CEV":
-            # if you want risk‑neutral CEV, override mu
-            params[1] = r
-        # you can add other models here if their drift term is in a fixed position
+      
 
     return tuple(params)

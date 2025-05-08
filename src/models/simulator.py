@@ -114,7 +114,7 @@ def _simulate_mjd(params, nsteps, nsim, dt):
     dN = np.random.poisson(lamb * dt, (nsteps, nsim))
     dJ = muZ * dN + sigmaZ * np.sqrt(dN) * np.random.randn(nsteps, nsim)
     dX = mu * dt + dW + dJ
-    # simulate log‐price path and then exponentiate so S₀=1
+    # simulate log‐price path and then exponentiate so S0=1
     log_paths = np.vstack([np.zeros((1, nsim)), np.cumsum(dX, axis=0)])
     return pd.DataFrame(np.exp(log_paths))
 
