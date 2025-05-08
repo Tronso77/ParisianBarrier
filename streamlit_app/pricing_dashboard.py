@@ -5,7 +5,7 @@ import os, sys
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
-import mpmath as mp
+from scipy.stats import norm
 
 # bring src/ on the path
 sys.path.insert(
@@ -22,20 +22,18 @@ from pricing.payoff      import (
     autocallable_payoff,
 )
 
-# ——————————————————————————————————————————————————————————————————
-# Black–Scholes closed‐form
+# — Black–Scholes closed‑form using scipy.stats.norm.cdf —
 def bs_call_price(S0, K, T, r, sigma):
-    d1 = (mp.log(S0/K) + (r + 0.5*sigma**2)*T) / (sigma*mp.sqrt(T))
-    d2 = d1 - sigma*mp.sqrt(T)
-    return S0*mp.ncdf(d1) - K*mp.e**(-r*T)*mp.ncdf(d2)
+    d1 = (np.log(S0/K) + (r + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
+    d2 = d1 - sigma*np.sqrt(T)
+    return S0 * norm.cdf(d1) - K * np.exp(-r*T) * norm.cdf(d2)
 
 def bs_put_price(S0, K, T, r, sigma):
-    # put‐call parity or direct formula
-    d1 = (mp.log(S0/K) + (r + 0.5*sigma**2)*T) / (sigma*mp.sqrt(T))
-    d2 = d1 - sigma*mp.sqrt(T)
-    return K*mp.e**(-r*T)*mp.ncdf(-d2) - S0*mp.ncdf(-d1)
+    d1 = (np.log(S0/K) + (r + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
+    d2 = d1 - sigma*np.sqrt(T)
+    return K * np.exp(-r*T) * norm.cdf(-d2) - S0 * norm.cdf(-d1)
 
-# ——————————————————————————————————————————————————————————————————
+
 def show_pricing_dashboard():
     st.header("3️⃣ Option Pricing")
 
@@ -43,7 +41,7 @@ def show_pricing_dashboard():
     with st.sidebar:
         st.subheader("Pricing Settings")
 
-        # model & simulation
+        # model & sim
         model    = st.selectbox("Underlying Model", ["GBM","HESTON"])
         maturity = st.number_input("Maturity (years)", 0.01, 5.0, 1.0, step=0.01)
         nsteps   = st.number_input("Time steps", 10, 2000, 252, step=1)
@@ -77,26 +75,28 @@ def show_pricing_dashboard():
     # ── Run pricing ──────────────────────────────────────────────────────────────
     if st.button("Price"):
         dt     = maturity / nsteps
+
+        # 1) build params once
         params = param_assign(model, S0=S0, r=r)
 
-        # build engine
+        # 2) wrap into engine
         engine = MonteCarloEngine(
             model=model,
-            params=param_assign(model, S0=S0, r=r),
+            params=params,
             nsteps=int(nsteps),
             nsim=int(nsim),
             dt=dt,
             seed=int(seed)
         )
 
-        # simulate under risk‑neutral: pass S0 and r
+        # 3) simulate under Q (pass S0 & r through)
         paths = engine.simulate(S0=S0, r=r)
 
         # show sample paths
         st.subheader("Sample Paths (first 10)")
         st.line_chart(paths.iloc[:, :min(10, paths.shape[1])])
 
-        # build payoff
+        # 4) build payoff
         if payoff_type == "European Call":
             payoff = payoff_european_call(paths, K)
         elif payoff_type == "European Put":
@@ -113,30 +113,24 @@ def show_pricing_dashboard():
                 knock_in_level=knock_in_level
             )
 
-        # price MC
+        # 5) MC price
         method   = "antithetic" if use_antithetic else ("stratified" if use_stratified else "standard")
         discount = np.exp(-r * maturity)
         result   = engine.price_option(payoff, discount=discount, method=method, strata=strata)
 
-        # display MC results
         st.subheader("📊 MC Pricing Results")
         c1, c2 = st.columns(2)
         c1.metric("MC Price",      f"{result['price']:.4f}")
         c2.metric("MC Std. Error", f"{result['stderr']:.4f}")
 
-        # If GBM, also show closed‑form Black–Scholes result
+        # 6) closed‑form Black–Scholes for GBM only
         if model == "GBM":
             S0_gbm, mu_gbm, sigma_gbm = params
-            # call price
             bs_c = bs_call_price(S0_gbm, K, maturity, r, sigma_gbm)
-            st.markdown(f"**Black–Scholes Call Price:** {float(bs_c):.4f}")
-            # put price
             bs_p = bs_put_price(S0_gbm, K, maturity, r, sigma_gbm)
-            st.markdown(f"**Black–Scholes Put Price:**  {float(bs_p):.4f}")
+            st.markdown(f"**BS Call Price:** {bs_c:.4f}  &nbsp;&nbsp; **BS Put Price:** {bs_p:.4f}")
 
-
-
-        # convergence plot
+        # 7) convergence plot
         st.subheader("Convergence of MC Estimate")
         cum_mean = np.cumsum(payoff) / np.arange(1, len(payoff)+1)
         fig, ax = plt.subplots()
@@ -145,7 +139,7 @@ def show_pricing_dashboard():
         ax.set_ylabel("Cumulative mean payoff")
         st.pyplot(fig)
 
-        # payoff histogram
+        # 8) payoff histogram
         st.subheader("Payoff Distribution")
         fig2, ax2 = plt.subplots()
         ax2.hist(payoff, bins=50, density=True, alpha=0.6)
