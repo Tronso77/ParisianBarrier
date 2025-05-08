@@ -5,19 +5,13 @@ from scipy.special import gamma
 from models.params import param_assign
 
 def simulate_paths(model, nsteps, nsim, dt, seed=None, *, S0=None, r=None):
-    """
-    Unified path simulation interface using QuantLib where available.
-    Returns a DataFrame of simulated paths.
-    """
     if seed is not None:
         np.random.seed(seed)
 
     model = model.upper()
     params = list(param_assign(model))
-    if S0 is not None:
-        params[0] = S0
-    if r is not None:
-        params[-1] = r
+    if S0 is not None: params[0] = S0
+    if r  is not None: params[-1] = r
     params = tuple(params)
 
     if model == "BM":
@@ -51,9 +45,10 @@ def simulate_paths(model, nsteps, nsim, dt, seed=None, *, S0=None, r=None):
     elif model == "VGCIR":
         return _simulate_vgcir(params, nsteps, nsim, dt)
     else:
-        raise ValueError(f"Model '{model}' not supported in simulator.")
+        raise ValueError(f"Model '{model}' not supported.")
 
 
+# ---------------------------------------------
 # Poisson
 def _simulate_poisson(params, nsteps, nsim, dt):
     λ = params[0]
@@ -62,6 +57,7 @@ def _simulate_poisson(params, nsteps, nsim, dt):
     return pd.DataFrame(N)
 
 
+# ---------------------------------------------
 # Gamma
 def _simulate_gamma(params, nsteps, nsim, dt):
     α, λG = params
@@ -71,23 +67,32 @@ def _simulate_gamma(params, nsteps, nsim, dt):
     return pd.DataFrame(X)
 
 
+# ---------------------------------------------
 # Brownian Motion (no drift) — NumPy fallback
 def _simulate_bm(params, nsteps, nsim, dt):
     _, σ = params
     dW = σ * np.sqrt(dt) * np.random.randn(nsteps, nsim)
-    X = np.vstack([np.zeros((1, nsim)), np.cumsum(dW, axis=0)])
+    X  = np.vstack([np.zeros((1, nsim)), np.cumsum(dW, axis=0)])
     return pd.DataFrame(X)
 
 
-# Arithmetic Brownian Motion 
+# ---------------------------------------------
+# Arithmetic Brownian Motion
 def _simulate_abm(params, nsteps, nsim, dt):
-    μ, σ = params
-    dW = σ * np.sqrt(dt) * np.random.randn(nsteps, nsim)
-    dX = μ * dt + dW
-    X = np.vstack([np.zeros((1, nsim)), np.cumsum(dX, axis=0)])
+    """
+    Arithmetic Brownian Motion starting at S0.
+    params = (S0, mu, sigma)
+    """
+    S0, μ, σ = params
+    # increments
+    inc = μ * dt + σ * np.sqrt(dt) * np.random.randn(nsteps, nsim)
+    # cumulative and prepend S0
+    cum = np.cumsum(inc, axis=0)
+    X = np.vstack([np.full((1, nsim), S0), S0 + cum])
     return pd.DataFrame(X)
 
 
+# ---------------------------------------------
 # Geometric Brownian Motion via QuantLib
 def _simulate_gbm(params, nsteps, nsim, dt):
     S0, μ, σ = params
@@ -97,9 +102,9 @@ def _simulate_gbm(params, nsteps, nsim, dt):
     spot   = ql.QuoteHandle(ql.SimpleQuote(S0))
     div_ts = ql.YieldTermStructureHandle(ql.FlatForward(today, 0.0,     ql.Actual365Fixed()))
     rf_ts  = ql.YieldTermStructureHandle(ql.FlatForward(today, μ,       ql.Actual365Fixed()))
-    vol_ts = ql.BlackVolTermStructureHandle(ql.BlackConstantVol(
-        today, ql.NullCalendar(), σ, ql.Actual365Fixed()
-    ))
+    vol_ts = ql.BlackVolTermStructureHandle(
+        ql.BlackConstantVol(today, ql.NullCalendar(), σ, ql.Actual365Fixed())
+    )
     process = ql.BlackScholesMertonProcess(spot, div_ts, rf_ts, vol_ts)
 
     ugrng = ql.UniformRandomSequenceGenerator(nsteps, ql.UniformRandomGenerator())
@@ -114,6 +119,7 @@ def _simulate_gbm(params, nsteps, nsim, dt):
     return pd.DataFrame(paths)
 
 
+# ---------------------------------------------
 # Variance Gamma via QuantLib
 def _simulate_vg(params, nsteps, nsim, dt):
     S0, θ, σ, ν = params
@@ -137,6 +143,7 @@ def _simulate_vg(params, nsteps, nsim, dt):
     return pd.DataFrame(paths)
 
 
+# ---------------------------------------------
 # Merton Jump Diffusion via QuantLib
 def _simulate_mjd(params, nsteps, nsim, dt):
     S0, σ, λ, μJ, σJ = params
@@ -146,9 +153,9 @@ def _simulate_mjd(params, nsteps, nsim, dt):
     spot   = ql.QuoteHandle(ql.SimpleQuote(S0))
     div_ts = ql.YieldTermStructureHandle(ql.FlatForward(today, 0.0,     ql.Actual365Fixed()))
     rf_ts  = ql.YieldTermStructureHandle(ql.FlatForward(today, 0.0,     ql.Actual365Fixed()))
-    vol_ts = ql.BlackVolTermStructureHandle(ql.BlackConstantVol(
-        today, ql.NullCalendar(), σ, ql.Actual365Fixed()
-    ))
+    vol_ts = ql.BlackVolTermStructureHandle(
+        ql.BlackConstantVol(today, ql.NullCalendar(), σ, ql.Actual365Fixed())
+    )
     process = ql.MertonJumpProcess(spot, div_ts, rf_ts, vol_ts, λ, μJ, σJ)
 
     ugrng = ql.UniformRandomSequenceGenerator(nsteps, ql.UniformRandomGenerator())
@@ -163,6 +170,7 @@ def _simulate_mjd(params, nsteps, nsim, dt):
     return pd.DataFrame(paths)
 
 
+# ---------------------------------------------
 # Kou Jump Diffusion via QuantLib
 def _simulate_kjd(params, nsteps, nsim, dt):
     S0, σ, λ, p, η1, η2 = params
@@ -186,39 +194,42 @@ def _simulate_kjd(params, nsteps, nsim, dt):
     return pd.DataFrame(paths)
 
 
-# Heston via QuantLib (multi-dimensional)
+# ---------------------------------------------
+# Heston (QuantLib, multi-dimensional)
 def _simulate_heston(params, nsteps, nsim, dt):
-    S0, v0, κ, θ, σ_v, ρ, r = params
+    S0, v0, kappa, theta, sigma_v, rho, r = params
     today = ql.Date.todaysDate()
     ql.Settings.instance().evaluationDate = today
 
     spot   = ql.QuoteHandle(ql.SimpleQuote(S0))
     div_ts = ql.YieldTermStructureHandle(ql.FlatForward(today, 0.0,     ql.Actual365Fixed()))
     rf_ts  = ql.YieldTermStructureHandle(ql.FlatForward(today, r,       ql.Actual365Fixed()))
-    process = ql.HestonProcess(rf_ts, div_ts, spot, v0, κ, θ, σ_v, ρ)
+    heston_process = ql.HestonProcess(rf_ts, div_ts, spot, v0, kappa, theta, sigma_v, rho)
+    process_array  = ql.StochasticProcessArray(heston_process)
 
     ugrng = ql.UniformRandomSequenceGenerator(nsteps, ql.UniformRandomGenerator())
     grng  = ql.GaussianRandomSequenceGenerator(ugrng)
     grid  = ql.TimeGrid(dt * nsteps, nsteps)
-    mpg   = ql.GaussianMultiPathGenerator(process, list(grid), grng, False)
+    mpg   = ql.GaussianMultiPathGenerator(process_array, grid, grng, False)
 
     paths = np.zeros((nsteps + 1, nsim))
     for i in range(nsim):
-        mp   = mpg.next().value()
-        spot_path = mp[0]  # index 0 is the underlying
+        multi_path = mpg.next().value()
+        spot_path  = multi_path[0]
         for j in range(nsteps + 1):
             paths[j, i] = spot_path[j]
     return pd.DataFrame(paths)
 
 
+# ---------------------------------------------
 # CIR via QuantLib
 def _simulate_cir(params, nsteps, nsim, dt):
-    θ, κ, σ_c, v0 = params
+    theta, kappa, sigma_c, v0 = params
     today = ql.Date.todaysDate()
     ql.Settings.instance().evaluationDate = today
 
     rf_ts  = ql.YieldTermStructureHandle(ql.FlatForward(today, 0.0, ql.Actual365Fixed()))
-    process = ql.CoxIngersollRossProcess(rf_ts, κ, θ, σ_c, v0)
+    process = ql.CoxIngersollRossProcess(rf_ts, kappa, theta, sigma_c, v0)
 
     ugrng = ql.UniformRandomSequenceGenerator(nsteps, ql.UniformRandomGenerator())
     grng  = ql.GaussianRandomSequenceGenerator(ugrng)
@@ -232,16 +243,17 @@ def _simulate_cir(params, nsteps, nsim, dt):
     return pd.DataFrame(paths)
 
 
+# ---------------------------------------------
 # CEV via QuantLib
 def _simulate_cev(params, nsteps, nsim, dt):
-    S0, μ, β, σ_c = params
+    S0, mu, beta, sigma_c = params
     today = ql.Date.todaysDate()
     ql.Settings.instance().evaluationDate = today
 
     spot   = ql.QuoteHandle(ql.SimpleQuote(S0))
     div_ts = ql.YieldTermStructureHandle(ql.FlatForward(today, 0.0,     ql.Actual365Fixed()))
-    rf_ts  = ql.YieldTermStructureHandle(ql.FlatForward(today, μ,       ql.Actual365Fixed()))
-    process = ql.CEVProcess(spot, div_ts, rf_ts, σ_c, β)
+    rf_ts  = ql.YieldTermStructureHandle(ql.FlatForward(today, mu,      ql.Actual365Fixed()))
+    process = ql.CEVProcess(spot, div_ts, rf_ts, sigma_c, beta)
 
     ugrng = ql.UniformRandomSequenceGenerator(nsteps, ql.UniformRandomGenerator())
     grng  = ql.GaussianRandomSequenceGenerator(ugrng)
@@ -254,6 +266,7 @@ def _simulate_cev(params, nsteps, nsim, dt):
             paths[j, i] = ql_p[j]
     return pd.DataFrame(paths)
 
+#_____________________________________________________________________________
 # ---------------------------------------------
 # Normal Inverse Gaussian 
 def _simulate_nig(params, nsteps, nsim, dt):
