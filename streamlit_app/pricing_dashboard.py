@@ -27,7 +27,7 @@ def bs_put_price(S0, K, T, r, sigma):
 
 
 # cache
-@st.experimental_memo(suppress_st_warning=True)
+@st.cache_data
 def run_paths(model: str, S0: float, r: float, nsteps: int, nsim: int, T: float, seed: int):
     dt     = T / nsteps
     params = param_assign(model, S0=S0, r=r)
@@ -47,7 +47,7 @@ def show_pricing_dashboard():
 
     # ── sidebar inputs ─────────────────────────────────────────────────────────
     with st.sidebar:
-        st.subheader("⚙️ Market & Payoff Inputs")
+        st.subheader(" Market & Payoff Inputs")
         S0       = st.number_input("Spot price S₀",     1.0, 1e5,   100.0, step=1.0)
         K        = st.number_input("Strike K",          0.01,1e6,   100.0, step=1.0)
         T        = st.number_input("Maturity (yrs)",   0.01,5.0,     1.0, step=0.01)
