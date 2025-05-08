@@ -1,17 +1,21 @@
-# streamlit_app/simulation_dashboard.py
+import os, sys
 import streamlit as st
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import skew, kurtosis
 
-# models import (src/ is added in app.py)
-from models.params import param_assign
+# ensure src/ is on path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+
 from models.simulator import simulate_paths
 
 @st.cache_data
-def run_sim(model: str, nsteps: int, nsim: int, dt: float, seed: int):
-    return simulate_paths(model, nsteps, nsim, dt, seed=seed)
+def run_sim(model: str, S0: float, r: float, nsteps: int, nsim: int, dt: float, seed: int):
+    """
+    Simulate paths with optional S0 and r overrides.
+    """
+    return simulate_paths(model, nsteps, nsim, dt, seed=seed, S0=S0, r=r)
 
 
 def show_simulation_dashboard():
@@ -22,20 +26,22 @@ def show_simulation_dashboard():
     with col1:
         model = st.selectbox(
             "Model",
-             ["BM","ABM","GBM","VG","NIG","MJD","KJD","POI","GAMMA","CIR","HESTON","CEV","SABR", "VGCIR", "CGMY"],
+             ["BM","ABM","GBM","VG","NIG","MJD","KJD","POI",
+              "GAMMA","CIR","HESTON","CEV","SABR", "VGCIR", "CGMY"],
             key="sim_model"
         )
+        S0 = st.number_input("Spot price S₀", 1.0, 1e5, 100.0, step=1.0, key="sim_S0")
+        r  = st.number_input("Drift / rate r", -1.0, 1.0, 0.0, step=0.001, key="sim_r")
         seed = st.number_input("RNG seed", value=42, step=1, key="sim_seed")
     with col2:
-        nsim = st.slider("Number of paths", 1000, 200000, 20000, step=1000, key="sim_nsim")
+        nsim   = st.slider("Number of paths", 1000, 200000, 20000, step=1000, key="sim_nsim")
         nsteps = st.slider("Number of steps", 10, 1000, 252, step=10, key="sim_nsteps")
     with col3:
         T = st.slider("Time horizon (yrs)", 0.1, 5.0, 1.0, step=0.1, key="sim_T")
 
     if st.button("Simulate Paths", key="sim_button"):
         dt = T / nsteps
-        params = param_assign(model)
-        paths = run_sim(model, nsteps, nsim, dt, seed=int(seed))
+        paths = run_sim(model, S0, r, nsteps, nsim, dt, seed=int(seed))
 
         # ── sample paths ─────────────────────────────────────────────────────────
         st.subheader(f"Sample of first 20 {model} paths")
@@ -69,9 +75,9 @@ def show_simulation_dashboard():
         st.subheader("Maturity (t=T) distribution & risk metrics")
         final = paths.iloc[-1].values
         stats = {
-            "mean": np.mean(final),
-            "std": np.std(final, ddof=1),
-            "skew": skew(final),
+            "mean":  np.mean(final),
+            "std":   np.std(final, ddof=1),
+            "skew":  skew(final),
             "kurtosis": kurtosis(final),
         }
         st.table(pd.DataFrame(stats, index=[""]).T)
@@ -80,10 +86,10 @@ def show_simulation_dashboard():
         pct_levels = [5, 25, 50, 75, 95]
         pct_values = np.percentile(final, pct_levels)
         var95 = pct_values[0]
-        es95 = final[final <= var95].mean()
+        es95  = final[final <= var95].mean()
         df_pct = pd.DataFrame({
             "percentile": pct_levels + ["VaR(95%)", "ES(95%)"],
-            "value": list(pct_values) + [var95, es95]
+            "value":       list(pct_values) + [var95, es95]
         })
         st.table(df_pct)
 
@@ -92,6 +98,6 @@ def show_simulation_dashboard():
         fig3, ax3 = plt.subplots()
         ax3.hist(final, bins=50)
         ax3.axvline(stats["mean"], color="red", linestyle="--", label="mean")
-        ax3.axvline(var95, color="black", linestyle=":", label="VaR(95%)")
+        ax3.axvline(var95,           color="black", linestyle=":",  label="VaR(95%)")
         ax3.legend()
         st.pyplot(fig3)
