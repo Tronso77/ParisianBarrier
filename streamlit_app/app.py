@@ -13,21 +13,16 @@ st.set_page_config(page_title="Monte Carlo Simulator", layout="wide")
 
 # 3) Import each dashboard’s entry point
 from simulation_dashboard    import show_simulation_dashboard
-from validation_dashboard    import show_validation_dashboard
 from pricing_dashboard       import show_pricing_dashboard
 
 # 4) Main navigation sidebar
 page = st.sidebar.selectbox(
     "🔹 Select Page",
-    ["Simulation", "Validation", "Pricing"]
+    ["Simulation", "Pricing"]
 )
 
 # 5) Dispatch to the right dashboard
 if page == "Simulation":
     show_simulation_dashboard()
-
-elif page == "Validation":
-    show_validation_dashboard()
-
 else:  # Pricing
     show_pricing_dashboard()
