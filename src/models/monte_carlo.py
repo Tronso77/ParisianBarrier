@@ -1,71 +1,44 @@
-from .simulator import simulate_paths
-import numpy as np
-import pandas as pd
-from typing import Optional, Dict
-
+import QuantLib as ql
 
 class MonteCarloEngine:
+    """
+    A unified Monte Carlo pricer that uses QuantLib's engines under the hood.
+    Usage:
+        engine = MonteCarloEngine(
+            model_process,    # a QuantLib StochasticProcess
+            payoff,           # a QuantLib Payoff (e.g. PlainVanillaPayoff)
+            exercise_date,    # a QuantLib Exercise (e.g. EuropeanExercise)
+            time_steps=100,
+            samples=25000
+        )
+        price = engine.price()
+    """
     def __init__(
         self,
-        model: str,
-        params: tuple,
-        nsteps: int,
-        nsim:   int,
-        dt:     float,
-        seed:   Optional[int] = None,
+        process: ql.GeneralizedBlackScholesProcess,
+        payoff: ql.Payoff,
+        exercise: ql.Exercise,
+        time_steps: int = 100,
+        samples: int = 50_000,
+        seed: int = 42
     ):
-        self.model      = model
-        self.params          = params
-        self.nsteps          = nsteps
-        self.nsim            = nsim
-        self.dt              = dt
-        self.seed            = seed
+        # Build the option
+        self.option = ql.VanillaOption(payoff, exercise)
 
-    def simulate(self, **kwargs) -> pd.DataFrame:
-        return simulate_paths(
-            self.model,
-            self.nsteps,
-            self.nsim,
-            self.dt,
-            seed=self.seed,
-            **kwargs
+        # Attach a QuantLib MC engine
+        mc_engine = ql.MCEuropeanEngine(
+            process,
+            "PseudoRandom",
+            timeSteps=time_steps,
+            requiredSamples=samples,
+            seed=seed
         )
+        self.option.setPricingEngine(mc_engine)
 
-    def payoff_european(self, paths: pd.DataFrame, strike: float, option: str = "call") -> np.ndarray:
-        ST = paths.iloc[-1].values
-        if option == "call":
-            return np.maximum(ST - strike, 0)
-        else:
-            return np.maximum(strike - ST, 0)
+    def price(self) -> float:
+        """Run the MC and return the price."""
+        return self.option.NPV()
 
-    def price_option(
-        self,
-        payoff: np.ndarray,
-        discount: float = 1.0,
-        method: str = "standard",
-        control_variate: Optional[Dict] = None,
-        strata: Optional[int] = None,
-        importance_weights: Optional[np.ndarray] = None,
-    ) -> Dict[str, float]:
-        P = payoff.copy()
-        if method == "antithetic":
-            P = 0.5 * (P.reshape(-1, 2).mean(axis=1))
-        if method == "stratified" and strata:
-            u = np.random.rand(len(P))
-            bins = np.linspace(0, 1, strata+1)
-            out = []
-            for i in range(strata):
-                idx = (u >= bins[i]) & (u < bins[i+1])
-                if idx.any():
-                    out.append(P[idx].mean())
-            P = np.array(out)
-        if method == "control_variate" and control_variate is not None:
-            Y = control_variate['paths']
-            mu_Y = control_variate['analytic_mean']
-            b = np.cov(P, Y)[0,1] / np.var(Y)
-            P = P - b*(Y - mu_Y)
-        if method == "importance" and importance_weights is not None:
-            P = P * importance_weights
-        price = discount * P.mean()
-        stderr = discount * P.std(ddof=1) / np.sqrt(len(P))
-        return {"price": price, "stderr": stderr}
+    def error_estimate(self) -> float:
+        """Get the MC standard error."""
+        return self.option.errorEstimate()
