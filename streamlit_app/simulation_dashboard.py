@@ -1,103 +1,114 @@
+# streamlit_app/simulation_dashboard.py
+
 import os, sys
 import streamlit as st
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.stats import skew, kurtosis
 
-# ensure src/ is on path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
-
+# make sure src/ is on the path
+sys.path.insert(
+    0,
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
+)
 from models.simulator import simulate_paths
 
-@st.cache_data
-def run_sim(model: str, S0: float, r: float, nsteps: int, nsim: int, dt: float, seed: int):
-    """
-    Simulate paths with optional S0 and r overrides.
-    """
-    return simulate_paths(model, nsteps, nsim, dt, seed=seed, S0=S0, r=r)
-
-
 def show_simulation_dashboard():
-    st.header("1️⃣ Path Simulation")
+    st.title("🔎 Path Simulation")
+    st.write("Generate and explore sample paths for various stochastic models.")
 
-    # ── Controls ──────────────────────────────────────────────────────────────
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        model = st.selectbox(
-            "Model",
-             ["BM","ABM","GBM","VG","NIG","MJD","KJD","POI",
-              "GAMMA","CIR","HESTON","CEV","SABR", "VGCIR", "CGMY"],
-            key="sim_model"
-        )
-        S0 = st.number_input("Spot price S₀", 1.0, 1e5, 100.0, step=1.0, key="sim_S0")
-        r  = st.number_input("Drift / rate r", -1.0, 1.0, 0.0, step=0.001, key="sim_r")
-        seed = st.number_input("RNG seed", value=42, step=1, key="sim_seed")
-    with col2:
-        nsim   = st.slider("Number of paths", 1000, 200000, 20000, step=1000, key="sim_nsim")
-        nsteps = st.slider("Number of steps", 10, 1000, 252, step=10, key="sim_nsteps")
-    with col3:
-        T = st.slider("Time horizon (yrs)", 0.1, 5.0, 1.0, step=0.1, key="sim_T")
+    # ── Sidebar ────────────────────────────────────────────────────────────────
+    st.sidebar.header("Simulation Settings")
 
-    if st.button("Simulate Paths", key="sim_button"):
+    model = st.sidebar.selectbox(
+        "Model",
+        [
+            "BM", "ABM", "GBM", "VG", "MJD", "NIG",
+            "POI", "GAMMA", "CEV", "HESTON", "CIR"
+        ]
+    )
+
+    # always‐needed
+    S0     = st.sidebar.number_input("Spot price S₀", 0.01, 1e6, 100.0, step=0.1)
+    T      = st.sidebar.slider("Horizon T (yrs)", 0.1, 5.0, 1.0, step=0.1)
+    nsteps = st.sidebar.slider("Time steps",        10, 1000, 252,   step=1)
+    nsim   = st.sidebar.slider("Number of paths",   10, 20000,5000,  step=10)
+    seed   = st.sidebar.number_input("Random seed",   0, 99999,  42,    step=1)
+
+    # model‐specific overrides
+    #  • drift/r  for ABM, GBM, CEV, Heston
+    if model in {"ABM", "GBM", "CEV", "HESTON"}:
+        r = st.sidebar.number_input("Drift / rate r", -1.0, 1.0, 0.05, step=0.001)
+    else:
+        r = None
+
+    #  • volatility σ  for diffusions
+    if model in {"BM", "ABM", "GBM", "CEV", "HESTON"}:
+        sigma = st.sidebar.number_input("Volatility σ", 0.0, 10.0, 0.2, step=0.01)
+    else:
+        sigma = None
+
+    #  • CEV exponent β
+    if model == "CEV":
+        beta = st.sidebar.number_input("CEV β", -2.0, 2.0, -2.0, step=0.1)
+    else:
+        beta = None
+
+    # how many to plot
+    n_display = st.sidebar.slider(
+        "Sample paths to plot", 1, min(20, nsim), min(5, nsim), step=1
+    )
+
+    if st.sidebar.button("Run Simulation"):
         dt = T / nsteps
-        paths = run_sim(model, S0, r, nsteps, nsim, dt, seed=int(seed))
 
-        # ── sample paths ─────────────────────────────────────────────────────────
-        st.subheader(f"Sample of first 20 {model} paths")
-        sample = paths.iloc[:, :min(20, nsim)]
-        st.line_chart(sample)
+        # simulate (we only support S0/r overrides today)
+        paths = simulate_paths(
+            model,
+            nsteps,
+            nsim,
+            dt,
+            seed=seed,
+            S0=S0,
+            r=r
+        )
 
-        # ── ensemble mean ±1σ ───────────────────────────────────────────────────
-        st.subheader("Ensemble mean ±1 σ over time")
-        mu = paths.mean(axis=1)
-        sd = paths.std(axis=1)
+        t = np.linspace(0, T, nsteps+1)
+
+        # ── Sample paths ──────────────────────────────────────────────────────
+        st.subheader(f"Sample of {n_display} paths ({model})")
+        sample_idx = np.linspace(0, nsim-1, n_display, dtype=int)
         fig, ax = plt.subplots()
-        ax.plot(paths.index * dt, mu, label="mean")
-        ax.fill_between(paths.index * dt, mu - sd, mu + sd, alpha=0.3, label="±1 σ")
+        for i in sample_idx:
+            ax.plot(t, paths.iloc[:, i], alpha=0.8)
         ax.set_xlabel("Time (yrs)")
         ax.set_ylabel("Value")
-        ax.legend()
-        st.pyplot(fig)
+        ax.set_title("Path Samples")
+        st.pyplot(fig, use_container_width=True)
 
-        # ── distribution at intermediate time ──────────────────────────────────
-        st.subheader("Distribution at selected time")
-        t_frac = st.slider("Time (fraction of T)", 0.0, 1.0, 1.0, step=0.25, key="dist_time")
-        idx = int(t_frac * nsteps)
-        data_t = paths.iloc[idx].values
+        # ── Ensemble mean ±1σ ────────────────────────────────────────────────
+        st.subheader("Ensemble mean ± 1 σ over time")
+        mu = paths.mean(axis=1)
+        sd = paths.std(axis=1)
         fig2, ax2 = plt.subplots()
-        ax2.hist(data_t, bins=50, density=True)
-        ax2.set_xlabel(f"Value at t={t_frac:.2f}·T")
-        ax2.set_ylabel("Density")
-        st.pyplot(fig2)
+        ax2.plot(t, mu, lw=2, color="black", label="mean")
+        ax2.fill_between(t, mu-sd, mu+sd, color="gray", alpha=0.3, label="± 1 σ")
+        ax2.set_xlabel("Time (yrs)")
+        ax2.set_ylabel("Value")
+        ax2.legend()
+        st.pyplot(fig2, use_container_width=True)
 
-        # ── maturity distribution & risk stats ─────────────────────────────────
-        st.subheader("Maturity (t=T) distribution & risk metrics")
+        # ── Histogram at maturity ────────────────────────────────────────────
+        st.subheader(f"Histogram at T = {T:.2f} yrs")
         final = paths.iloc[-1].values
-        stats = {
-            "mean":  np.mean(final),
-            "std":   np.std(final, ddof=1),
-            "skew":  skew(final),
-            "kurtosis": kurtosis(final),
-        }
-        st.table(pd.DataFrame(stats, index=[""]).T)
-
-        # Value‐at‐Risk and Expected Shortfall
-        pct_levels = [5, 25, 50, 75, 95]
-        pct_values = np.percentile(final, pct_levels)
-        var95 = pct_values[0]
-        es95  = final[final <= var95].mean()
-        df_pct = pd.DataFrame({
-            "percentile": pct_levels + ["VaR(95%)", "ES(95%)"],
-            "value":       list(pct_values) + [var95, es95]
-        })
-        st.table(df_pct)
-
-        # ── histogram at maturity ─────────────────────────────────────────────
-        st.subheader("Histogram at maturity")
         fig3, ax3 = plt.subplots()
-        ax3.hist(final, bins=50)
-        ax3.axvline(stats["mean"], color="red", linestyle="--", label="mean")
-        ax3.axvline(var95,           color="black", linestyle=":",  label="VaR(95%)")
+        ax3.hist(final, bins=30, density=True, alpha=0.6)
+        ax3.axvline(final.mean(), color="red", linestyle="--", label="mean")
+        ax3.set_xlabel("Value")
+        ax3.set_ylabel("Density")
         ax3.legend()
-        st.pyplot(fig3)
+        st.pyplot(fig3, use_container_width=True)
+
+# entry‐point
+if __name__ == "__main__":
+    show_simulation_dashboard()

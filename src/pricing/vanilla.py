@@ -1,5 +1,6 @@
 import QuantLib as ql
 
+
 def price_european_option(
     S0: float,
     K: float,
@@ -7,9 +8,11 @@ def price_european_option(
     r: float,
     sigma: float,
     option_type: str = "call",
-    engine: str = "analytic",    # "analytic" or "mc"
+    engine: str = "analytic",      # "analytic" or "mc"
     mc_samples: int = 100_000,
-    mc_steps: int = 100
+    mc_steps: int = 100,
+    mc_seed: int = 42,
+    antithetic: bool = False
 ) -> float:
     """
     Price a European call or put using QuantLib.
@@ -34,47 +37,61 @@ def price_european_option(
         Number of MC samples (if engine="mc")
     mc_steps : int
         Number of time steps in MC (if engine="mc")
+    mc_seed : int
+        RNG seed for MC engine
+    antithetic : bool
+        Whether to use antithetic variates in MC
 
     Returns
     -------
     float
         Option price
     """
-    # 1) Setup dates
+    # 1) Setup evaluation date & maturity
     today = ql.Date.todaysDate()
     ql.Settings.instance().evaluationDate = today
-    maturity = today + int(T * 365 + 0.5)
+    # convert T in years to a QuantLib Date
+    maturity = today + ql.Period(int(T * 365 + 0.5), ql.Days)
 
     # 2) Market data
     spot = ql.QuoteHandle(ql.SimpleQuote(S0))
     div_ts = ql.YieldTermStructureHandle(
-        ql.FlatForward(today, 0.0,    ql.Actual365Fixed()))
+        ql.FlatForward(today, 0.0, ql.Actual365Fixed())
+    )
     rf_ts = ql.YieldTermStructureHandle(
-        ql.FlatForward(today, r,      ql.Actual365Fixed()))
+        ql.FlatForward(today, r, ql.Actual365Fixed())
+    )
     vol_ts = ql.BlackVolTermStructureHandle(
         ql.BlackConstantVol(today, ql.NullCalendar(), sigma, ql.Actual365Fixed())
     )
 
-    # 3) Payoff & exercise
+    # 3) Payoff & Exercise
     payoff = ql.PlainVanillaPayoff(
-        ql.Option.Call if option_type.lower()=="call" else ql.Option.Put,
+        ql.Option.Call if option_type.lower() == "call" else ql.Option.Put,
         K
     )
     exercise = ql.EuropeanExercise(maturity)
     option = ql.VanillaOption(payoff, exercise)
 
-    # 4) Process & engine
+    # 4) Process setup
     process = ql.BlackScholesMertonProcess(spot, div_ts, rf_ts, vol_ts)
-    if engine == "analytic":
-        option.setPricingEngine(ql.AnalyticEuropeanEngine(process))
-    else:
-        mc_engine = ql.MCEuropeanEngine(
-            process,
-            "PseudoRandom",
-            timeSteps=mc_steps,
-            requiredSamples=mc_samples
-        )
-        option.setPricingEngine(mc_engine)
 
-    # 5) Return the NPV
+    # 5) Choose engine
+    if engine == "analytic":
+        engine_ql = ql.AnalyticEuropeanEngine(process)
+    else:
+        # Monte Carlo engine with pseudo-random Sobol / PRNG
+        engine_ql = ql.MCEuropeanEngine(
+            process,
+            "pseudorandom",
+            timeSteps=mc_steps,
+            antitheticVariate=antithetic,
+            requiredSamples=mc_samples,
+            seed=mc_seed
+        )
+    option.setPricingEngine(engine_ql)
+
+    # 6) Return NPV
     return option.NPV()
+
+
