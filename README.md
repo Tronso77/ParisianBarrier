@@ -1,6 +1,6 @@
 # Monte Carlo Simulator Dashboard
 
-A Python package and Streamlit application for simulating, validating, and pricing financial derivatives under a variety of stochastic models.
+A Python package and Streamlit application for simulating, validating, and pricing financial derivatives under stochastic models.
 
 ## Live Demo
 
@@ -19,29 +19,12 @@ A deployed version is available here:
   * Normal Inverse Gaussian (NIG)
   * Merton & Kou Jump Diffusions (MJD, KJD)
   * CIR and Heston stochastic volatility
-  * CEV, Poisson, Gamma, SABR (partial)
-* **Variance Reduction**: Antithetic variates, stratified sampling, control variates, importance sampling.
-* **Cumulant Validation**: Compare Monte Carlo moments against analytic cumulants over time.
+  * CEV, Poisson, Gamma, SABR (not yet)
+* **Variance Reduction**: Antithetic variates, stratified sampling, control variates, importance sampling.(CV and IS not yet)
 * **Option Pricing**: Price European calls/puts and autocallable structures under GBM & Heston (others coming soon).
-* **Interactive Dashboard**: Streamlit app to explore simulations, validate models, and price payoffs.
 
-## 📁 Repository Structure
 
-```
-Simulator/
-├── src/                    # Core library code
-│   ├── models/             # Simulation engines & Monte Carlo framework
-│   ├── validation/         # Analytic cumulant calculations
-│   ├── pricing/            # Payoff definitions & hedging logic
-│   └── utils/              # Helper functions
-├── streamlit_app/          # Streamlit dashboards (Simulation, Validation, Pricing)
-├── notebooks/              # Jupyter notebooks for experimentation
-├── data/                   # (ignored) sample data
-├── plots/                  # (ignored) report figures
-└── README.md               # Project overview (this file)
-```
-
-## 📦 Installation
+## Installation
 
 1. Clone the repo:
 
