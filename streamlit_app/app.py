@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # Sidebar for navigation
-st.sidebar.title("📊 Monte Carlo Simulator")
+st.sidebar.title("Monte Carlo Simulator")
 page = st.sidebar.radio(
     "Navigate to",
     options=["Simulation", "Pricing", "Structuring"]

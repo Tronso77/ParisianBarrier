@@ -14,7 +14,7 @@ sys.path.insert(
 from models.simulator import simulate_paths
 
 def show_simulation_dashboard():
-    st.title("🔎 Path Simulation")
+    st.title("Path Simulation")
     st.write("Generate and explore sample paths for various stochastic models.")
 
     # ── Sidebar ────────────────────────────────────────────────────────────────

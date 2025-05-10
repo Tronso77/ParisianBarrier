@@ -13,7 +13,7 @@ from pricing.vanilla import price_european_option
 
 
 def show_pricing():
-    st.title("💰 European Option Pricing")
+    st.title("European Option Pricing")
     st.write("Compare analytic Black–Scholes prices to Monte Carlo estimates.")
 
     # Sidebar inputs
