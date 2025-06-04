@@ -20,7 +20,7 @@ A deployed version is available here:
   * Merton & Kou Jump Diffusions (MJD, KJD)
   * CIR and Heston stochastic volatility
   * CEV, Poisson, Gamma, SABR (not yet)
-* **Variance Reduction**: Antithetic variates, stratified sampling, control variates, importance sampling.(CV and IS not yet)
+* **Variance Reduction**: Antithetic variates, stratified sampling, control variates, importance sampling. (CV and IS not yet)
 * **Option Pricing**: Price European calls/puts and autocallable structures under GBM & Heston (others coming soon).
 
 
