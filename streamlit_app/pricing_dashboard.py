@@ -12,7 +12,6 @@ from pricing.vanilla        import price_european_option
 from pricing.shifted_black  import price_shifted_black
 from models.params          import param_assign
 from models.monte_carlo     import MonteCarloEngine
-from pricing.payoff         import payoff_european_call, payoff_european_put
 
 # Black–Scholes closed-form (mpmath already used in vanilla, but kept here for context)
 def bs_call_price(S0, K, T, r, sigma):
