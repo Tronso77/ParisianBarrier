@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 
 # import dashboard entrypoints
 from simulation_dashboard import show_simulation_dashboard
-from pricing_dashboard    import show_pricing
+from pricing_dashboard    import show_pricing_dashboard
 #from dashboards.structuring import show_structuring
 
 st.set_page_config(
@@ -20,12 +20,12 @@ st.set_page_config(
 st.sidebar.title("Monte Carlo Simulator")
 page = st.sidebar.radio(
     "Navigate to",
-    options=["Simulation", "Pricing", "Structuring"]
+    options=["Simulation", "Pricing", "Payoffs"]
 )
 
 # Dispatch
 if page == "Simulation":
     show_simulation_dashboard()
 elif page == "Pricing":
-    show_pricing()
+    show_pricing_dashboard()
 
