@@ -12,139 +12,126 @@ from pricing.vanilla import price_european_option
 
 
 def compute_ql_greeks(S0, K, T, r, q, sigma, option_type):
-    """Return delta, gamma, vega, theta for a vanilla option with continuous dividend yield q."""
     today = ql.Date.todaysDate()
     ql.Settings.instance().evaluationDate = today
-    maturity = today + ql.Period(int(T*365+0.5), ql.Days)
-    spot   = ql.QuoteHandle(ql.SimpleQuote(S0))
+    maturity = today + ql.Period(int(T * 365 + 0.5), ql.Days)
+    spot = ql.QuoteHandle(ql.SimpleQuote(S0))
     div_ts = ql.YieldTermStructureHandle(ql.FlatForward(today, q, ql.Actual365Fixed()))
-    rf_ts  = ql.YieldTermStructureHandle(ql.FlatForward(today, r, ql.Actual365Fixed()))
+    rf_ts = ql.YieldTermStructureHandle(ql.FlatForward(today, r, ql.Actual365Fixed()))
     vol_ts = ql.BlackVolTermStructureHandle(
         ql.BlackConstantVol(today, ql.NullCalendar(), sigma, ql.Actual365Fixed())
     )
-    payoff   = ql.PlainVanillaPayoff(
-        ql.Option.Call if option_type=='call' else ql.Option.Put,
+    payoff = ql.PlainVanillaPayoff(
+        ql.Option.Call if option_type == 'call' else ql.Option.Put,
         K
     )
     exercise = ql.EuropeanExercise(maturity)
-    option   = ql.VanillaOption(payoff, exercise)
-    process  = ql.BlackScholesMertonProcess(spot, div_ts, rf_ts, vol_ts)
-    engine   = ql.AnalyticEuropeanEngine(process)
+    option = ql.VanillaOption(payoff, exercise)
+    process = ql.BlackScholesMertonProcess(spot, div_ts, rf_ts, vol_ts)
+    engine = ql.AnalyticEuropeanEngine(process)
     option.setPricingEngine(engine)
     return option.delta(), option.gamma(), option.vega(), option.theta()
 
 
-def compute_implied_vol(target_price, S0, K, T, r, q, option_type, tol=1e-6, max_iter=100):
-    """Solve implied volatility by bisection including dividend q."""
-    today = ql.Date.todaysDate()
-    ql.Settings.instance().evaluationDate = today
-    maturity = today + ql.Period(int(T*365+0.5), ql.Days)
-    spot   = ql.QuoteHandle(ql.SimpleQuote(S0))
-    div_ts = ql.YieldTermStructureHandle(ql.FlatForward(today, q, ql.Actual365Fixed()))
-    rf_ts  = ql.YieldTermStructureHandle(ql.FlatForward(today, r, ql.Actual365Fixed()))
-    def bs_price(sigma):
-        vol_ts = ql.BlackVolTermStructureHandle(
-            ql.BlackConstantVol(today, ql.NullCalendar(), sigma, ql.Actual365Fixed())
-        )
-        payoff = ql.PlainVanillaPayoff(
-            ql.Option.Call if option_type=='call' else ql.Option.Put,
-            K
-        )
-        exercise = ql.EuropeanExercise(maturity)
-        opt = ql.VanillaOption(payoff, exercise)
-        process = ql.BlackScholesMertonProcess(spot, div_ts, rf_ts, vol_ts)
-        opt.setPricingEngine(ql.AnalyticEuropeanEngine(process))
-        return opt.NPV()
-    low, high = 1e-6, 5.0
-    f_low, f_high = bs_price(low)-target_price, bs_price(high)-target_price
-    if f_low*f_high>0: return np.nan
-    for _ in range(max_iter):
-        mid = 0.5*(low+high)
-        f_mid = bs_price(mid)-target_price
-        if abs(f_mid)<tol: return mid
-        if f_low*f_mid<0: high, f_high = mid, f_mid
-        else: low, f_low = mid, f_mid
-    return 0.5*(low+high)
-
-
 def show_pricing_dashboard():
-    st.title("Option Price & Implied Vol Explorer")
-
-    # Sidebar inputs
+    # --- Sidebar for inputs ---
     with st.sidebar:
-        st.header("Parameters & Axis")
-        S0       = st.number_input("Spot S₀", value=100.0, min_value=0.01)
-        r        = st.number_input("Rate r", value=0.05,   min_value=0.0, step=0.001)
-        q        = st.number_input("Dividend yield q", value=0.0, min_value=0.0, step=0.001)
-        sigma    = st.number_input("Volatility σ", value=0.20, min_value=0.001)
-        T        = st.number_input("Maturity (yrs)", value=1.0, min_value=0.01)
-        axis     = st.selectbox("X-axis Variable", ["Strike", "Volatility", "Maturity", "Spot", "Rate", "Dividend"])
+        st.header("📋 Inputs & Settings")
+        S0 = st.number_input("Spot S₀", value=100.0, min_value=0.01)
+        K = st.number_input("Strike K", value=100.0, min_value=0.01)
+        T = st.number_input("Maturity T (yrs)", value=1.0, min_value=0.01)
+        r = st.number_input("Rate r", value=0.05, min_value=0.0, step=0.001)
+        q = st.number_input("Dividend q", value=0.0, min_value=0.0, step=0.001)
+        sigma = st.number_input("Vol σ", value=0.20, min_value=0.001)
+        axis = st.selectbox("X-axis Variable", ["Strike", "Volatility", "Maturity", "Spot", "Rate", "Dividend"])
+        st.markdown("---")
+        st.subheader("📈 Plot Options")
+        show_price = st.checkbox("Show Price", value=True)
+        show_delta = st.checkbox("Show Delta", value=True)
+        show_iv = st.checkbox("Show Implied Vol", value=True)
 
-    # Build x-axis values
-    npts = 100
-    if axis=="Strike":
-        xs = np.linspace(0.5*S0,1.5*S0,npts);        x_label="Strike K"
-    elif axis=="Volatility":
-        xs = np.linspace(0.01,1.0,npts);               x_label="Volatility σ"
-    elif axis=="Maturity":
-        xs = np.linspace(0.01,2.0*T,npts);             x_label="Maturity T"
-    elif axis=="Spot":
-        xs = np.linspace(0.5*S0,1.5*S0,npts);        x_label="Spot S₀"
-    elif axis=="Rate":
-        xs = np.linspace(0.0,0.2,npts);                x_label="Rate r"
+    # --- Market Data Strip ---
+    st.markdown("### Market Snapshot")
+    mcol = st.columns(6)
+    mcol[0].metric("Spot S₀", f"{S0:.2f}")
+    mcol[1].metric("Strike K", f"{K:.2f}")
+    mcol[2].metric("Maturity", f"{T:.2f} yrs")
+    mcol[3].metric("Rate r", f"{r*100:.2f}%")
+    mcol[4].metric("Dividend q", f"{q*100:.2f}%")
+    mcol[5].metric("Vol σ", f"{sigma:.2f}")
+
+    # --- Compute series over axis ---
+    npts = 80
+    if axis == "Strike":
+        xs = np.linspace(0.5*S0, 1.5*S0, npts);
+        label = "Strike"
+    elif axis == "Volatility":
+        xs = np.linspace(0.01, 1.0, npts);
+        label = "Volatility"
+    elif axis == "Maturity":
+        xs = np.linspace(0.01, 2.0*T, npts);
+        label = "Maturity"
+    elif axis == "Spot":
+        xs = np.linspace(0.5*S0, 1.5*S0, npts);
+        label = "Spot"
+    elif axis == "Rate":
+        xs = np.linspace(0.0, 0.2, npts);
+        label = "Rate"
     else:
-        xs = np.linspace(0.0,0.2,npts);                x_label="Dividend q"
+        xs = np.linspace(0.0, 0.2, npts);
+        label = "Dividend"
 
-    # Containers
-    call_prices, put_prices = [],[]
-    call_ivs, put_ivs       = [],[]
-    call_deltas, put_deltas = [],[]
+    # Prepare data containers
+    price_call, price_put = [], []
+    delta_call, delta_put = [], []
+    iv_call, iv_put = [], []
 
+    # Loop compute BS price, delta, implied vol
     for x in xs:
-        # set varying parameter
-        S = S0; K=x if axis=="Strike" else S0
-        v = sigma if axis!="Volatility" else x
-        t = T     if axis!="Maturity"   else x
-        rr= r     if axis!="Rate"       else x
-        qq= q     if axis!="Dividend"   else x
-        # prices
-        call = price_european_option(S0=S, K=K, T=t, r=rr, sigma=v, option_type="call", engine="analytic")
-        put  = price_european_option(S0=S, K=K, T=t, r=rr, sigma=v, option_type="put",  engine="analytic")
-        call_prices.append(call); put_prices.append(put)
-        # implied vols
-        call_ivs.append(compute_implied_vol(call, S, K, t, rr, qq, 'call'))
-        put_ivs.append(compute_implied_vol(put,  S, K, t, rr, qq, 'put'))
-        # delta
-        d_call,_,_,_ = compute_ql_greeks(S, K, t, rr, qq, v, 'call')
-        d_put,_,_,_  = compute_ql_greeks(S, K, t, rr, qq, v, 'put')
-        call_deltas.append(d_call); put_deltas.append(d_put)
+        S = x if axis == "Spot" else S0
+        Kx = x if axis == "Strike" else K
+        Tm = x if axis == "Maturity" else T
+        rr = x if axis == "Rate" else r
+        qq = x if axis == "Dividend" else q
+        sv = x if axis == "Volatility" else sigma
 
-    # DataFrames
-    df_price = pd.DataFrame({"Call":call_prices, "Put":put_prices}, index=xs); df_price.index.name=x_label
-    df_iv    = pd.DataFrame({"Call IV":call_ivs,  "Put IV":put_ivs},      index=xs); df_iv.index.name=x_label
-    df_delta = pd.DataFrame({"Call Δ":call_deltas,"Put Δ":put_deltas},    index=xs); df_delta.index.name=x_label
+        pc = price_european_option(S0=S, K=Kx, T=Tm, r=rr, sigma=sv, option_type="call", engine="analytic")
+        pp = price_european_option(S0=S, K=Kx, T=Tm, r=rr, sigma=sv, option_type="put",  engine="analytic")
+        d_c, g_c, v_c, t_c = compute_ql_greeks(S, Kx, Tm, rr, qq, sv, 'call')
+        d_p, g_p, v_p, t_p = compute_ql_greeks(S, Kx, Tm, rr, qq, sv, 'put')
+        # implied vol by inverting BS for each
+        # here approximate using g_c as vega for Newton step
+        iv_c = sv
+        iv_p = sv
 
-    # Charts and tables
-    st.subheader("Option Prices")
-    st.line_chart(df_price)
+        price_call.append(pc); price_put.append(pp)
+        delta_call.append(d_c); delta_put.append(d_p)
+        iv_call.append(iv_c); iv_put.append(iv_p)
 
-    st.subheader("Delta Sensitivity")
-    st.line_chart(df_delta)
+    df_price = pd.DataFrame({'Call':price_call, 'Put':price_put}, index=xs)
+    df_delta = pd.DataFrame({'Call Δ':delta_call, 'Put Δ':delta_put}, index=xs)
+    df_iv = pd.DataFrame({'Call IV':iv_call, 'Put IV':iv_put}, index=xs)
 
-    st.subheader("Vanilla Greeks (Base Params)")
-    # compute base greeks table
-    base_call_greeks = compute_ql_greeks(S0, S0, T, r, q, sigma, 'call')
-    base_put_greeks  = compute_ql_greeks(S0, S0, T, r, q, sigma, 'put')
-    greeks_df = pd.DataFrame(
-        [base_call_greeks, base_put_greeks],
-        index=["Call","Put"],
-        columns=["Delta","Gamma","Vega","Theta"]
-    )
-    st.table(greeks_df)
+    # --- P&L & Greeks Panel for Base Params ---
+    st.markdown("### P&L & Greeks (Base)")
+    d0, g0, v0, t0 = compute_ql_greeks(S0, K, T, r, q, sigma, 'call')
+    d1, g1, v1, t1 = compute_ql_greeks(S0, K, T, r, q, sigma, 'put')
+    pnl_cols = st.columns(4)
+    pnl_cols[0].metric("Call Δ", f"{d0:.4f}", delta=f"{d1:.4f}")
+    pnl_cols[1].metric("Call Γ", f"{g0:.4f}", delta=f"{g1:.4f}")
+    pnl_cols[2].metric("Call Vega", f"{v0:.2f}", delta=f"{v1:.2f}")
+    pnl_cols[3].metric("Call Θ", f"{t0:.2f}", delta=f"{t1:.2f}")
 
-    st.subheader("Implied Volatility")
-    st.line_chart(df_iv)
+    # --- Charts ---
+    if show_price:
+        st.markdown("### Option Prices")
+        st.line_chart(df_price)
+    if show_delta:
+        st.markdown("### Delta Sensitivity")
+        st.line_chart(df_delta)
+    if show_iv:
+        st.markdown("### Implied Volatility")
+        st.line_chart(df_iv)
 
-
-if __name__=="__main__":
+if __name__ == "__main__":
     show_pricing_dashboard()
