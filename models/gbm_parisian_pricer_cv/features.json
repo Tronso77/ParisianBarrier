@@ -1,0 +1,18 @@
+{
+  "feature_names": [
+    "T",
+    "sigma",
+    "K_rel",
+    "B_rel",
+    "D_frac",
+    "log_moneyness",
+    "log_barrier_gap",
+    "carry",
+    "sigma2T",
+    "T_sigma",
+    "sqrtT",
+    "logD",
+    "gap_rel",
+    "gap_rel_sqrtT"
+  ]
+}

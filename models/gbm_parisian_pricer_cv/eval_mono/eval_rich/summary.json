@@ -1,0 +1,20 @@
+{
+  "rows": 3000,
+  "MAE": 7.921623282437132,
+  "RMSE": 22.083741784100233,
+  "RelMAE_vsLattice": 0.020609386707608066,
+  "RelMAE_vsVanilla": 0.01465349657429672,
+  "Monotone_viols_Brel": 0,
+  "Monotone_checks_Brel": 2500,
+  "Monotone_rate_Brel": 0.0,
+  "Monotone_viols_Dfrac": 0,
+  "Monotone_checks_Dfrac": 2400,
+  "Monotone_rate_Dfrac": 0.0,
+  "Monotone_viols_Krel": 0,
+  "Monotone_checks_Krel": 2400,
+  "Monotone_rate_Krel": 0.0,
+  "outputs": {
+    "dir": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/models/gbm_parisian_pricer_cv/eval_mono/eval_rich",
+    "parity_png": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/models/gbm_parisian_pricer_cv/eval_mono/eval_rich/parity.png"
+  }
+}

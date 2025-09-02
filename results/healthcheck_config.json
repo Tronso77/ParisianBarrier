@@ -1,0 +1,7 @@
+{
+  "CJY_Nx": 900,
+  "CJY_M": 96,
+  "LAT_STEPS": 600,
+  "MC_STEPS": 500,
+  "MC_PATHS": 50000
+}

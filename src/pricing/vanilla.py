@@ -1,97 +1,67 @@
-import QuantLib as ql
+# src/pricing/vanilla.py
+from __future__ import annotations
 
+from math import exp, log, sqrt, erf
+import numpy as np
+from scipy.stats import norm
 
-def price_european_option(
-    S0: float,
-    K: float,
-    T: float,
-    r: float,
-    sigma: float,
-    option_type: str = "call",
-    engine: str = "analytic",      # "analytic" or "mc"
-    mc_samples: int = 100_000,
-    mc_steps: int = 100,
-    mc_seed: int = 42,
-    antithetic: bool = False
-) -> float:
+__all__ = ["bs_price", "bs_delta_call", "vanilla_payoff", "discounted_vanilla_payoff"]
+
+def _N(z: float) -> float:
+    """Standard normal CDF (via error function)."""
+    return 0.5 * (1.0 + erf(z / sqrt(2.0)))
+
+def bs_price(S: float, K: float, T: float, r: float, q: float, sigma: float, option_type: str = "call") -> float:
     """
-    Price a European call or put using QuantLib.
-
-    Parameters
-    ----------
-    S0 : float
-        Spot price
-    K : float
-        Strike
-    T : float
-        Time to maturity (in years)
-    r : float
-        Risk-free rate
-    sigma : float
-        Volatility
-    option_type : str
-        "call" or "put"
-    engine : str
-        "analytic" for Black-Scholes formula, "mc" for Monte Carlo
-    mc_samples : int
-        Number of MC samples (if engine="mc")
-    mc_steps : int
-        Number of time steps in MC (if engine="mc")
-    mc_seed : int
-        RNG seed for MC engine
-    antithetic : bool
-        Whether to use antithetic variates in MC
-
-    Returns
-    -------
-    float
-        Option price
+    Black–Scholes price with continuous dividend yield q.
+    option_type: 'call' or 'put'
     """
-    # 1) Setup evaluation date & maturity
-    today = ql.Date.todaysDate()
-    ql.Settings.instance().evaluationDate = today
-    # convert T in years to a QuantLib Date
-    maturity = today + ql.Period(int(T * 365 + 0.5), ql.Days)
+    opt = option_type.lower()
+    if T <= 0:
+        return max(0.0, (S - K) if opt == "call" else (K - S))
+    if sigma <= 0:
+        fwd = S * exp((r - q) * T)
+        disc = exp(-r * T)
+        intrinsic = max(0.0, fwd - K) if opt == "call" else max(0.0, K - fwd)
+        return disc * intrinsic
 
-    # 2) Market data
-    spot = ql.QuoteHandle(ql.SimpleQuote(S0))
-    div_ts = ql.YieldTermStructureHandle(
-        ql.FlatForward(today, 0.0, ql.Actual365Fixed())
-    )
-    rf_ts = ql.YieldTermStructureHandle(
-        ql.FlatForward(today, r, ql.Actual365Fixed())
-    )
-    vol_ts = ql.BlackVolTermStructureHandle(
-        ql.BlackConstantVol(today, ql.NullCalendar(), sigma, ql.Actual365Fixed())
-    )
-
-    # 3) Payoff & Exercise
-    payoff = ql.PlainVanillaPayoff(
-        ql.Option.Call if option_type.lower() == "call" else ql.Option.Put,
-        K
-    )
-    exercise = ql.EuropeanExercise(maturity)
-    option = ql.VanillaOption(payoff, exercise)
-
-    # 4) Process setup
-    process = ql.BlackScholesMertonProcess(spot, div_ts, rf_ts, vol_ts)
-
-    # 5) Choose engine
-    if engine == "analytic":
-        engine_ql = ql.AnalyticEuropeanEngine(process)
+    v = sigma * sqrt(T)
+    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / v
+    d2 = d1 - v
+    if opt == "call":
+        return S * exp(-q * T) * _N(d1) - K * exp(-r * T) * _N(d2)
     else:
-        # Monte Carlo engine with pseudo-random Sobol / PRNG
-        engine_ql = ql.MCEuropeanEngine(
-            process,
-            "pseudorandom",
-            timeSteps=mc_steps,
-            antitheticVariate=antithetic,
-            requiredSamples=mc_samples,
-            seed=mc_seed
-        )
-    option.setPricingEngine(engine_ql)
+        return K * exp(-r * T) * _N(-d2) - S * exp(-q * T) * _N(-d1)
 
-    # 6) Return NPV
-    return option.NPV()
+def bs_delta_call(S: np.ndarray | float, K: float, T: float, r: float, q: float, sigma: float) -> np.ndarray | float:
+    """
+    Vectorized Black–Scholes call delta with dividend yield q.
+    Returns a NumPy array if S is array-like, otherwise a float.
+    """
+    arr = np.asarray(S, dtype=float)
+    T = float(max(T, 1e-12))
+    v = sigma * np.sqrt(T)
+    if v <= 0:
+        delta = np.where(arr > K, np.exp(-q * T), 0.0)
+    else:
+        d1 = (np.log(arr / K) + (r - q + 0.5 * sigma * sigma) * T) / v
+        delta = np.exp(-q * T) * norm.cdf(d1)
+    return float(delta) if np.isscalar(S) else delta
 
+def vanilla_payoff(ST: np.ndarray, K: float, option_type: str = "call") -> np.ndarray:
+    """
+    Vectorized terminal payoff for a vanilla European option.
+    ST: array-like of terminal prices.
+    """
+    ST = np.asarray(ST, dtype=float)
+    opt = option_type.lower()
+    if opt == "call":
+        return np.maximum(ST - K, 0.0)
+    elif opt == "put":
+        return np.maximum(K - ST, 0.0)
+    else:
+        raise ValueError("option_type must be 'call' or 'put'")
 
+def discounted_vanilla_payoff(ST: np.ndarray, K: float, r: float, T: float, option_type: str = "call") -> np.ndarray:
+    """Discounted vanilla payoff."""
+    return np.exp(-r * T) * vanilla_payoff(ST, K, option_type)

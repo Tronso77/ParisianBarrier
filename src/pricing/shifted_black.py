@@ -12,10 +12,7 @@ def price_shifted_black(
     shift: float,
     option_type: OptionType = "call",
 ) -> float:
-    """
-    Shifted-Black pricing: treat S0+shift and K+shift as underlying/strike,
-    then apply standard BS formula.
-    """
+   
     # shift
     S = S0 + shift
     X = K  + shift

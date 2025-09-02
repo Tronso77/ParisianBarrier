@@ -1,0 +1,76 @@
+{
+  "library": "lightgbm",
+  "model_class": "LGBMRegressor",
+  "seed": 42,
+  "target_kind": "ratio_logit",
+  "target_desc": "logit(LAT_OUT/Vanilla)",
+  "features": [
+    "T",
+    "sigma",
+    "K_rel",
+    "B_rel",
+    "D_frac",
+    "log_moneyness",
+    "log_barrier_gap",
+    "carry",
+    "sigma2T",
+    "T_sigma",
+    "sqrtT",
+    "logD",
+    "gap_rel",
+    "gap_rel_sqrtT"
+  ],
+  "monotone_constraints": [
+    0,
+    0,
+    -1,
+    -1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "eps_ratio": 1e-06,
+  "train_metrics": {
+    "MAE": 7.408754894971775,
+    "RMSE": 20.979195397166677,
+    "RelMAE": 0.013841456753481607
+  },
+  "test_metrics": {
+    "MAE": 8.710522934484285,
+    "RMSE": 27.744280349004303,
+    "RelMAE": 0.015186597143781299
+  },
+  "train_size": 2550,
+  "test_size": 450,
+  "best_iteration": 9961,
+  "source": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/results/dataset_parisian_gbm_pricing.csv",
+  "train_domain": {
+    "T": [
+      0.0833333333333333,
+      1.0
+    ],
+    "sigma": [
+      0.1,
+      0.3
+    ],
+    "K_rel": [
+      0.7999999999999999,
+      1.2
+    ],
+    "B_rel": [
+      0.6,
+      0.97
+    ],
+    "D_frac": [
+      0.009999999999999603,
+      0.2
+    ]
+  }
+}

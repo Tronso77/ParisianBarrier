@@ -1,0 +1,14 @@
+{
+  "rows": 3000,
+  "MAE_vs_Lattice": 7.921623282437132,
+  "RMSE_vs_Lattice": 22.083741784100233,
+  "RelMAE_vs_Lattice": 0.020609386707607678,
+  "Monotone_violations_Brel": 0,
+  "Monotone_checked_groups_Brel": 500,
+  "Monotone_violations_Dfrac": 0,
+  "Monotone_checked_groups_Dfrac": 600,
+  "Monotone_violations_Krel": 0,
+  "Monotone_checked_groups_Krel": 600,
+  "source": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/models/gbm_parisian_pricer_cv/oof_predictions.csv",
+  "output": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/models/gbm_parisian_pricer_cv/eval_mono/test_predictions_mono.csv"
+}

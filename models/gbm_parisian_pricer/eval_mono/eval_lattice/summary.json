@@ -1,0 +1,10 @@
+{
+  "rows": 450,
+  "MAE_vs_Lattice": 8.710522934484286,
+  "RMSE_vs_Lattice": 27.7442803490043,
+  "RelMAE_vs_Lattice": 0.02117107866721686,
+  "Monotone_violations_Brel": 44,
+  "Monotone_checked_groups_Brel": 75,
+  "Monotone_violations_Dfrac": 87,
+  "Monotone_checked_groups_Dfrac": 76
+}

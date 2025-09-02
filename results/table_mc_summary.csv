@@ -1,0 +1,4 @@
+Section,rows,lastN,MAE_bps,best_method,best_SE,min_abs_bias_bps,config
+MC_convergence,5.0,50000.0,12.0926082603458,,,,
+MC_varred,,,,+ CV(vanilla),0.0003868131395063,,
+MC_bias_vs_steps,,,,,,11.160017133891,grid / BB off

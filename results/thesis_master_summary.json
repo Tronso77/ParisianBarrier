@@ -1,0 +1,97 @@
+{
+  "ML": {
+    "OOF_raw": {
+      "rows": 3000,
+      "MAE": 7.96886815644756,
+      "RMSE": 22.23206264284545,
+      "RelMAE_vsLattice": 0.021417632846563762,
+      "RelMAE_vsVanilla": 0.015326077315813317,
+      "Monotone_checks_Brel": 500,
+      "Monotone_viols_Brel": 421,
+      "Monotone_rate_Brel": 0.842,
+      "Monotone_checks_Dfrac": 600,
+      "Monotone_viols_Dfrac": 510,
+      "Monotone_rate_Dfrac": 0.85,
+      "Monotone_checks_Krel": 600,
+      "Monotone_viols_Krel": 3,
+      "Monotone_rate_Krel": 0.005
+    },
+    "OOF_mono": {
+      "rows": 3000,
+      "MAE": 7.96886815644756,
+      "RMSE": 22.23206264284545,
+      "RelMAE_vsLattice": 0.021417632846563762,
+      "RelMAE_vsVanilla": 0.015326077315813317,
+      "Monotone_checks_Brel": 500,
+      "Monotone_viols_Brel": 0,
+      "Monotone_rate_Brel": 0.0,
+      "Monotone_checks_Dfrac": 600,
+      "Monotone_viols_Dfrac": 0,
+      "Monotone_rate_Dfrac": 0.0,
+      "Monotone_checks_Krel": 600,
+      "Monotone_viols_Krel": 0,
+      "Monotone_rate_Krel": 0.0
+    },
+    "CV_mono": {
+      "rows": 3000,
+      "MAE": 6.306275448777966,
+      "RMSE": 17.713443260720965,
+      "RelMAE_vsLattice": 0.016440961279029855,
+      "RelMAE_vsVanilla": 0.01167771777830182,
+      "Monotone_checks_Brel": 500,
+      "Monotone_viols_Brel": 0,
+      "Monotone_rate_Brel": 0.0,
+      "Monotone_checks_Dfrac": 600,
+      "Monotone_viols_Dfrac": 0,
+      "Monotone_rate_Dfrac": 0.0,
+      "Monotone_checks_Krel": 600,
+      "Monotone_viols_Krel": 0,
+      "Monotone_rate_Krel": 0.0
+    }
+  },
+  "Compare": {
+    "table": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/results/table_method_compare.tex",
+    "fig_price": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/compare_methods_bar.png",
+    "fig_runtime": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/compare_methods_runtime.png",
+    "trade": {
+      "S0": 5000.0,
+      "K": 5000.0,
+      "T": 1.0,
+      "r": 0.01,
+      "q": 0.0,
+      "sigma": 0.2,
+      "B": 4500.0,
+      "D": 0.1
+    }
+  },
+  "SweepD": {
+    "csv": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/results/curve_cumulative_with_ml.csv",
+    "fig_price": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/curve_cum_with_ml.png",
+    "fig_error": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/curve_cum_error_bps.png"
+  },
+  "Heatmap_and_slices_from_CV": {
+    "heatmap": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/heatmap_B_D_bps_from_cv.png",
+    "slice_B_price": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/slice_B_price.png",
+    "slice_B_error": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/slice_B_error_bps.png",
+    "slice_K_price": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/slice_K_price.png",
+    "slice_K_error": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/slice_K_error_bps.png"
+  },
+  "Residual_hist": {
+    "oof_raw": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/hist_residuals_oof_raw.png",
+    "oof_mono": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/hist_residuals_oof_mono.png",
+    "cv_mono": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/hist_residuals_cv_mono.png"
+  },
+  "Dataset": {
+    "fig_hist_ratios": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/dataset_hist_ratios.png"
+  },
+  "Tables": {
+    "error_percentiles": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/results/table_error_percentiles.tex",
+    "runtime": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/results/table_runtime.tex"
+  },
+  "Also_found": [
+    "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/curve_cum_vs_consec.png",
+    "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/curve_cum_with_ml.png",
+    "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/curve_cum_error_bps.png"
+  ],
+  "notes": []
+}

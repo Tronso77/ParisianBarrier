@@ -1,0 +1,18 @@
+{
+  "source_csv": "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/models/gbm_parisian_pricer_cv/preds_cv_mono.csv",
+  "representative": {
+    "T": 0.25,
+    "sigma": 0.2,
+    "K_over_S0": 1.0
+  },
+  "slices": {
+    "D_fix": 0.1,
+    "B_fix": 0.9
+  },
+  "figures": [
+    "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/where_errors_heatmap.png",
+    "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/slice_B_price_error.png",
+    "/Users/fabricesashinkumar/Desktop/GitHub/Simulator/thesis_assets/figs/slice_D_price_error.png"
+  ],
+  "error_label": "ML \u2212 lattice (bps vs BS)"
+}
