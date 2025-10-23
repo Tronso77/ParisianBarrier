@@ -1,8 +1,8 @@
-# Parisian Barrier Desk Prototype
+# Parisian Barrier Prototype
 
-Small internal tool used on the structuring desk to price Parisian barriers, keep tabs on the barrier clock, and sanity-check hedging numbers before we speak with trading. The code stays narrow on purpose: a Monte Carlo engine, Parisian payoff logic, and analytics that tell us how often the deal knocks in and how the clock behaves.
+Small tool to price Parisian barriers, keep tabs on the barrier clock, and sanity-check hedging numbers. The code: a Monte Carlo engine, Parisian payoff logic, and analytics that tell us how knocks in and clock behave.
 
-The emphasis is commercial, not academic. Everything here answers the standard desk questions – *what’s the hit ratio, how much time do we actually sit inside the window, and what happens if we tighten the barrier or tweak vol?*
+The emphasisquestions – *what’s the hit ratio, how much time do we actually sit inside the window, and what happens if we tighten the barrier or tweak vol?*
 
 ## What’s in the box
 - Monte Carlo engine tuned for Parisian monitoring (antithetic, stratified sampling, optional vanilla control variate).
@@ -17,9 +17,7 @@ source .venv/bin/activate
 pip install -e .[dev]
 jupyter lab
 ```
-Then open `notebooks/01_Parisian_Barrier_Trading_Desk_Demo.ipynb` for the walkthrough.
+Then open `notebooks/01_Parisian_Barrier_Demo.ipynb` for the walkthrough.
 
 Sample trades used in the walkthrough sit in `data/sample/trade_params.csv`. Adjust or load them straight into your own analyses.
 
-## License
-MIT License – this remains an internal prototype, so please keep it in-house.
