@@ -35,6 +35,8 @@ class MonteCarloEngine:
         n_steps: int = 100,
         seed: int | None = None,
         brownian_bridge: bool = False,  # keep False for Parisian unless you densify consistently
+        bb_refine: int = 4,
+        bb_mode: Literal["refine", "resample"] = "refine",
         antithetic: bool = False,
         control_variate: bool = False,  # used by price_option (vanilla)
         stratified: bool = False,
@@ -51,6 +53,8 @@ class MonteCarloEngine:
         self.n_steps = int(n_steps)
         self.seed = seed
         self.brownian_bridge = bool(brownian_bridge)
+        self.bb_refine = int(max(bb_refine, 1))
+        self.bb_mode = str(bb_mode)
         self.antithetic = bool(antithetic)
         self.control_variate = bool(control_variate)
         self.stratified = bool(stratified)
@@ -101,7 +105,16 @@ class MonteCarloEngine:
             paths = df.values.T  # (n_steps+1, n_paths)
 
         if self.brownian_bridge:
-            paths = apply_brownian_bridge(paths, self.T, self.sigma)
+            if self.model != "GBM" and self.verbose:
+                print("[Bridge] Skipping Brownian bridge: only supported for GBM paths.")
+            else:
+                paths = apply_brownian_bridge(
+                    paths,
+                    self.T,
+                    self.sigma,
+                    refine_factor=self.bb_refine,
+                    mode=self.bb_mode,
+                )
 
         return paths
 

@@ -1,0 +1,4 @@
+trade_id,S0,K,T,r,q,sigma,barrier,window,option_type,inout,direction,style,within,comment
+PX1,100,100,0.25,0.02,0.00,0.20,95,0.15,call,in,down,cumulative,loglinear,Desk benchmark knock-in call
+PX2,100,95,0.50,0.02,0.00,0.18,90,0.12,call,out,down,cumulative,loglinear,Tighter window for defensive autocall
+PX3,100,105,0.75,0.015,0.01,0.22,110,0.20,put,in,up,cumulative,loglinear,Up-and-in hedge look

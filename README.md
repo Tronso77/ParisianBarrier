@@ -1,20 +1,25 @@
-# Monte Carlo Simulator Dashboard
+# Parisian Barrier Desk Prototype
 
-A Python package and Streamlit application for simulating, validating, and pricing financial derivatives under stochastic models.
+Small internal tool used on the structuring desk to price Parisian barriers, keep tabs on the barrier clock, and sanity-check hedging numbers before we speak with trading. The code stays narrow on purpose: a Monte Carlo engine, Parisian payoff logic, and analytics that tell us how often the deal knocks in and how the clock behaves.
 
-## Live Demo
+The emphasis is commercial, not academic. Everything here answers the standard desk questions – *what’s the hit ratio, how much time do we actually sit inside the window, and what happens if we tighten the barrier or tweak vol?*
 
-A deployed version is available here:
+## What’s in the box
+- Monte Carlo engine tuned for Parisian monitoring (antithetic, stratified sampling, optional vanilla control variate).
+- Parisian payoff logic with fractional barrier occupation so discrete monitoring bias stays under control.
+- Utilities to summarise hits, clock time, and quick scenario tables the desk cares about.
+- One notebook that walks through the trade narrative we use with the desk head.
 
-**https://simulator-mc.streamlit.app/**
+## Run this demo
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .[dev]
+jupyter lab
+```
+Then open `notebooks/01_Parisian_Barrier_Trading_Desk_Demo.ipynb` for the walkthrough.
 
+Sample trades used in the walkthrough sit in `data/sample/trade_params.csv`. Adjust or load them straight into your own analyses.
 
-# Master thesis on use of AI/ML for exotic barrier option pricing
-
-##  Contributing
-
-Contributions are welcome! Please fork the repo, create a feature branch, and submit a pull request.
-
-## 📜 License
-
-This project is released under the MIT License.
+## License
+MIT License – this remains an internal prototype, so please keep it in-house.

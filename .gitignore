@@ -1,8 +1,9 @@
-# Byte‑compiled
+# Byte-compiled / caches
 __pycache__/
 *.py[cod]
+.pytest_cache/
 
-# Jupyter
+# Jupyter artefacts
 .ipynb_checkpoints/
 
 # Virtual env / dotenv
@@ -10,12 +11,11 @@ __pycache__/
 venv/
 .venv/
 
+# OS cruft
 .DS_Store
 
-# Project folders to ignore
-src/validation/
-notebooks/
-data/
-plots/
-tests/
+# Private archive moved out of the public prototype
+legacy/
 
+# Large or intermediate results (legacy directory keeps the originals)
+results/
